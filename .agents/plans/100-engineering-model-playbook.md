@@ -95,7 +95,9 @@ Also ask: cross-cutting types (e.g. decisions, risks, assumptions, issues)?
 How do they attach (nested, linked, global log)? Must every need carry one?
 
 **b. Fields** — domain and applicable standards (safety, security,
-regulatory, none); fields given by the user or suggested. A suggestion
+regulatory, none); fields given by the user or suggested. Offer a
+suggestion as a **pick list** (each field with its purpose), not as a
+package — run 001 dropped 5 of 11 suggested fields. A suggestion
 covers what the domain needs, e.g. lifecycle, integrity / relevance,
 ownership, priority, verification method, test level, fields of the
 cross-cutting types, review dates.
@@ -145,18 +147,18 @@ text answers. Record everything in the project plan.
 | Q-TYPES | Gaps in the type list (e.g. architecture level missing?) | always | from the brief | 001: none |
 | Q-DUP | How to prevent overlapping needs of a type | brief has a uniqueness rule | review axis; axis + check skill; check skill | 001: review axis |
 | Q-INT | Integrity attributes | brief names safety / security | domain standard levels (e.g. ASIL, SIL, DAL, CAL, IEC 62304 class); generic bools + level; none | 001: generic |
-| Q-XCUT | Placement of each cross-cutting type | brief has cross-cutting types | nested in parent + link; file per stream; central log — tell the user first: workflow stages cover a whole upstream type and author into files (PH-16), so nested / per-need elements are created by stage skills, not stages | 001: decisions nested, risks global; both via stage skills + recording skills |
+| Q-XCUT | Placement of each cross-cutting type (suggestion for decisions / risks: §8.1) | brief has cross-cutting types | nested in parent + link; file per stream; central log — tell the user first: workflow stages cover a whole upstream type and author into files (PH-16), so nested / per-need elements are created by stage skills, not stages | 001: decisions nested, risks global; both via stage skills + recording skills |
 | Q-LANG | Code / test language, framework | brief has code-marker or test-result types, `{CODE}` unclear | from the repository | 001: Python + pytest |
-| Q-MOUNT | sphinx-mounts usage | Sphinx in `{TOOLCHAINS}` and sources outside `{DOCS}` | mount sources; mount templates; none | 001: src + tests |
+| Q-MOUNT | sphinx-mounts usage — tell the user first: mounts carry **documents** (`.rst` / `.md`), not code; code is read by Codelinks directly | Sphinx in `{TOOLCHAINS}` and sources outside `{DOCS}` | docs next to the code (`src-trace` / `test-file` pages in `src/`, `tests/`); mount templates; none | 001: src + tests |
 | Q-LINKS | Rename existing links / migrate needs? | `{EXISTING}` conflicts with the model | rename + migrate; keep | 001: rename |
 | Q-SCHEMA | Create a `schemas.json` for elements and links? | always (the user may not think of it) | yes, from the brief §2.1 e; later; no | 001: yes (asked late, at G0) |
 | Q-SEV | Schema severities per CI tier | Q-SCHEMA = yes | `violation` always wrong + `info` completeness (open on integration, zero on release); all `violation`; three levels | 001: violation + info |
 | Q-COV | Coverage rules: where | Q-SCHEMA = yes | schema + workflow traces; workflow only; schema only | 001: both |
 | Q-PROP | Propagate attributes along links | integrity attributes exist | child must match parent; parent from child; both; none | 001: none |
 | Q-XREQ | Which types must carry a cross-cutting need (e.g. a decision) | brief has a "every … has …" rule | per type | 001: decisions on us, req, spec, test_spec |
-| Q-LIFE | **Which types** have a lifecycle (`status`), and which values / final values per type | always — ask per type, not one answer for all | only cross-cutting types; all authored types; all types; draft→review→approved; own values per type on the one `status` field | 001: only `dec` / `risk` (first misapplied to all types, L20) |
-| Q-EVAL | How the user evaluates the configuration | always | model docs page; gate per phase; validator output; pilot chain; extra questions in pilot | 001: docs page, gates, pilot questions |
-| Q-JOBS | How cross-cutting needs are kept current (unresolved / stale) | brief asks for evaluation | unresolved: schema `info` rules + report pages; stale: review gate with `outgoing` trace edges on the stage (works for nested needs), hash-conditioned links `TARGET[fp=="…"]` with a derived `fingerprint` field (not for nested needs — the hash invalidates itself), own ledger script; judgment: review skills | 001: decisions → trace edges, risks → hash conditions, reports, no script |
+| Q-LIFE | **Which types** have a lifecycle (`status`), and which values / final values per type (suggestion: §8.1) | always — ask per type, not one answer for all | only cross-cutting types; all authored types; all types; draft→review→approved; own values per type on the one `status` field | 001: only `dec` / `risk` (first misapplied to all types, L20) |
+| Q-EVAL | How the user evaluates the configuration | always | model docs page; gate per phase; validator output; pilot chain with per-artefact approvals; **autonomous pilot + HTML review** (agent authors and reviews, user reviews the rendered result); extra questions in pilot | 001: docs page, gates; the pilot ran autonomously with an HTML review (user's choice at P8) |
+| Q-JOBS | How cross-cutting needs are kept current (unresolved / stale) (suggestion: §8.1) | brief asks for evaluation | unresolved: schema `info` rules + report pages; stale: review gate with `outgoing` trace edges on the stage (works for nested needs), hash-conditioned links `TARGET[fp=="…"]` with a derived `fingerprint` field (not for nested needs — the hash invalidates itself), own ledger script; judgment: review skills | 001: decisions → trace edges, risks → hash conditions, reports, no script |
 | Q-CI | CI tiers | always | one pipeline; integration + release tiers; more | 001: two tiers |
 | Q-REL | What marks a release | release tier exists | release branch PR (name pattern?); tag (pattern?); both | 001: both (`release/*`, `v*`) |
 | Q-CI1 | What the integration tier blocks on | per tier | build / lint; new gaps (ratchet); failing verdicts; tests; open status | 001: all but open status |
@@ -172,8 +174,12 @@ text answers. Record everything in the project plan.
 
 - Fill §1 from the repository.
 - Tool versions; CI version pin = local version.
-- `{MANIFEST}`: install-owned skills / packs (never edit; own assets get own
-  names).
+- `{MANIFEST}`: install-owned skills / packs (see Q-PRESET before editing
+  any). Its paths mix bases: harness copies are relative to the repository
+  root, `quality/*.toml` to `{DOCS}`.
+- `{EXISTING}`: check existing field values against the planned enums
+  before migrating (run 001: a variant status `win_auth` violated the new
+  status set).
 - `{TOOL_BUGS}`: which entries turn from latent to applies with the planned
   features (`[workflow]`, codelinks, test reports, schemas, `id_regex`,
   mounts, variants).
@@ -188,6 +194,12 @@ text answers. Record everything in the project plan.
   routes, traces, markers. (In a dir that already has a `ubproject.toml` it
   writes no `[workflow]`.)
 - Fetch the schema; check every planned key against it.
+- **Diff the brief against the blank profile** (types, links, stages,
+  routes, quality packs, `id_regex`, provenance fields) and ask the user
+  about every deviation, one question each.
+- Stage routes and codelinks `src_dir` are **relative to `{DOCS}`** (the
+  directory of `ubproject.toml`), e.g. `user_stories.rst`, `../src` — not
+  repository-relative.
 
 ### C. Brief, discussion, project plan
 
@@ -268,6 +280,18 @@ From tool facts (re-check on new versions):
   graphviz), and look at every rendered diagram in both builds at the gates.
 - **Derived fields** (`derive`) need Sphinx-Needs >= 9.0; pin it and silence
   `config.derive_sphinx_minimum` (an `info`, fatal under `--deny info`).
+- **Schemas with allow-lists.** ubc supports only `allOf`, `properties`,
+  `required`, `type`, `unevaluatedProperties` in `select` / `local`; express
+  "not X" as an enum of the allowed types (UB-21). Negative-test every rule
+  in a scratch copy, in both toolchains.
+- **Type names from `needs.json`,** not from tool docs (Sphinx-Test-Reports
+  creates `testcase`, its docs say `test-case`, STR-06); a `select` on a
+  wrong name silently validates nothing.
+- **Codelinks one-line fields are positional:** a required field after one
+  with a default is refused; make all marker fields required (explicit
+  links and safety / security values).
+- **Own review skills** are copies of a generic installed review skill
+  (only the stage name differs); the rubric comes from the quality pack.
 - **Network validation** nests at most 4 levels; `contains` on a list field
   needs `items` in Sphinx (SN-05).
 - **Variants + verdicts** (if `{VARIANTS}`): verdicts are per id and ignore
@@ -346,10 +370,114 @@ At the end of each run (phase P9):
 
 1. Move every learning-log entry of the project plan into §1 (parameter),
    §2 (brief field or question), §3 (step), §4 (rule), §5 (CI) or §6
-   (pitfall). Run-specific answers go only into "seen in runs" columns.
+   (pitfall); a setup the user liked as a whole goes to §8 (suggested
+   patterns). Run-specific answers go only into "seen in runs" columns.
 2. Re-check §4 / §6 against the tool versions of the run.
 3. Add the run below.
 
 | Run | Plan | Date | Project | Notes |
 |---|---|---|---|---|
-| 1 | [001](001-engineering-model.md) | 2026-10-17 | product_demo `docs/` | first run, pilot |
+| 1 | [001](001-engineering-model.md) | 2026-10-17 | product_demo `docs/` | first run; P0–P9; pilot "login lockout" autonomous with HTML review; CI 1 + CI 2 green; 20 new tool findings (UB-20…26, PH-14…22, SN-08/09, STR-06/07); decisions / risks setup became pattern §8.1 |
+| 2 | [002](002-add-arch-level.md) | planned | product_demo `docs/` | model change: architecture level (tests "changing a model later") |
+
+## 8. Suggested patterns
+
+Proven setups to **propose** in §2 (the user decides; adapt names and
+values to the brief). Each lists what to build, the reference files of the
+run that proved it, and its limits.
+
+### 8.1 Decisions and risks (proven in run 001)
+
+Use when the brief asks for documented decisions and risks that stay
+current while the model changes (§2.2 Q-XCUT, Q-LIFE, Q-JOBS).
+
+**Model**
+
+| | Decision (`dec`) | Risk (`risk`) |
+|---|---|---|
+| Where it lives | **nested inside** the need it decides | own page (`risks.rst`) |
+| Links | `decides` → the parent, **filled automatically**; further targets explicit (parent first) | `affects` → any need; `mitigated_by` → req / spec / test_spec / dec; both with **hash conditions** `TARGET[fp=="…"]` |
+| Status (built-in `status`, only these two types) | `proposed` → `accepted` / `superseded` | `open` → `mitigated` / `accepted` → `closed` |
+| Fields | `safety_relevant`, `security_relevant` | + `risk_category` (safety / security / technical / project / ai-workflow), `severity`, `likelihood` |
+| Body | Context / Alternatives / Consequences / Rationale (bold labels) | Cause / Effect / Mitigation |
+| Required on | every `us` / `req` / `spec` / `test_spec` has ≥ 1 decision (adapt per brief) | — |
+| Kept current by | the **review gate**: a changed parent outdates the decision's verdict | the **hash conditions**: a changed target fails the link (`needs.link_condition_failed`) |
+| Re-evaluation | re-review (`review-decision`) | re-review (`review-risk`), then sign-off `scripts/refresh_risk_links.py <ID>` |
+
+**Configuration** (`ubproject.toml`)
+
+- `[needs.links.decides] predicates = [["type == 'dec'", "[[copy('parent_need')]]"]]`
+  — not `default` (warns on every need without a parent).
+- Derived fields (Sphinx-Needs ≥ 9.0, pin it; `[lint] ignore =
+  ["config.derive_sphinx_minimum"]`):
+  `fp` = `derive = { kind = "fingerprint" }`, `parent` =
+  `derive = { kind = "copy", field = "parent_need" }`.
+- `status`: `schema.enum` = union of the decision and risk values, **no
+  default** (a default lands on every type).
+- `[workflow]`: a `decisions` stage (`produces = "dec"`, `optional = true`,
+  review skill) with `[[workflow.stages.trace]]` `link = "decides"`,
+  `direction = "outgoing"`, `min = 1`, one edge per parent type — makes the
+  fingerprint follow `decides`, creates no gaps; a `risks` stage
+  (`optional = true`, review skill) **without** trace edges. Neither stage
+  is authored through `ubc agent prompt` (it would ask for one element
+  linking all upstream needs, PH-16); `release_disallow_status = ["open",
+  "proposed"]`; no `[workflow.lifecycle]` (PH-14).
+
+**Schema** (`schemas.json`, all negative-tested in both toolchains)
+
+| Rule | Severity | Checks |
+|---|---|---|
+| `status-dec`, `status-risk` | violation | status required, own values |
+| `status-none` | violation | other types carry no status (`maxLength: 0`) |
+| `dec-nested` | violation | `parent` set (not `parent_need`, UB-25) |
+| `link-dec` | violation | ≥ 1 `decides`, no decision as target |
+| `link-risk-affects`, `link-risk-mitigation` | violation | ≥ 1 `affects`; mitigation targets req / spec / test_spec / dec |
+| `risk-mitigated`, `risk-accepted` | violation | mitigated → `mitigated_by`; accepted → an accepted decision decides it (selects with `required: [status]`) |
+| `dec-present` | info | required parents have a decision |
+| `dec-proposed`, `risk-open` | info | unresolved items (block a release only) |
+
+**Skills and templates**
+
+- Stage skills record decisions / risks of their stage and hand a complete
+  JSON payload to the recorders (`handover/decision.json`, `risk.json`);
+  `draft-impl` nests implementation decisions in the spec it implements.
+- `record-dec` (renders `dec.rst` nested at the end of the parent's body,
+  `:decides:` only for further targets), `record-risk` (renders `risk.rst`
+  with plain ids, appends, runs the refresh script) — validate the payload,
+  stop on gaps, decide nothing.
+- Quality packs `dec.toml` (context present required, alternatives,
+  consequences, rationale), `risk.toml` (cause and effect, rating justified,
+  affected complete, mitigation fit); parent packs get `decisions_documented`.
+
+**CI and reports**
+
+- CI 1: `proposed` / `open`, `dec-present` (info) and stale risks allowed
+  (Sphinx `suppress_warnings += needs.link_condition_failed` via an env
+  var, ubc `UBCODE_CONFIG_OVERRIDE` `lint.ignore`), reported; CI 2: none.
+- Reports: proposed decisions, needs without a decision
+  (`len(decides_back) == 0`), decision log; open risks, risks without a
+  mitigation (`len(mitigated_by) == 0`), security / safety risks — same rows
+  in ubc and Sphinx; hashes are not rendered.
+
+**Reference files (run 001):** `docs/ubproject.toml`, `docs/schemas.json`,
+`docs/quality/{dec,risk}.toml`, `.agents/templates/{dec,risk}.rst`,
+`.agents/templates/handover/`, `.agents/skills/{record-dec,record-risk,review-risk}/`,
+`scripts/refresh_risk_links.py`, `docs/reports/{decisions,risks}.rst`,
+`docs/engineering_model/decisions_risks.rst`.
+
+**Limits to tell the user**
+
+- Editing a decision changes its parent's text → the parent (and its
+  direct children) are re-reviewed too.
+- Hash conditions do not work for nested needs (the hash would include
+  itself) — that is why decisions use the review gate; only the full 64-hex
+  value works (UB-24); the RST carries the hashes (pages do not).
+- `change-request` does not reconcile the decisions nested in the edited
+  need, nor risk texts (PH-22) — the review gate and the hash conditions
+  flag them instead.
+- `ubc agent impact` does not list nested decisions (PH-19).
+- Alternatives evaluated in run 001 P5 and not chosen: own ledger script
+  (works with nesting, extra code), hash conditions for decisions (fail with
+  nesting), `evaluate-*` skills (the review skills do the job), scheduled job
+  (optional).
+

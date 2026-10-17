@@ -29,22 +29,27 @@ here names `product_demo` (plan 998 §3).
 
 ## 0. This repository
 
-`product_demo` is a small ubCode docs project (`docs/`): types `req` /
-`spec` / `test`, links `implements` / `tests`, mixed RST + MyST, variant data
-(`docs/variants.json`, `[needs.variant_data]`, `parse_variants` on `status` and
-`platform_note`). It builds with ubc (`ubc script ci`, CI in
-`.github/workflows/ci-main.yml` / `ci-release.yml` (setup: `.github/actions/setup/action.yml`)) and with Sphinx + Sphinx-Needs (`ubc script
-sphinx`, via `uv`). Pharaoh skills (profile `vmodel` 21) and quality packs
-(`docs/quality/*.toml`) are installed, but `docs/ubproject.toml` has no
-`[workflow]` / `[quality]` section yet. Not used here: external needs,
-`needimport`, schemas, `id_regex`, Sphinx-Codelinks, sphinx-mounts,
-Sphinx-Test-Reports, ubc-action.
+`product_demo` is a small ubCode docs project (`docs/`) with an
+engineering model built by plan 001: types `us` / `req` / `spec` / `impl`
+(Sphinx-Codelinks markers in `src/`) / `test_spec` / test results
+(Sphinx-Test-Reports from pytest) / `dec` / `risk`, one link per edge,
+`schemas.json`, `id_regex`, derived fields (`fp`, `parent`), conditional
+(hash) links on risks, sphinx-mounts (`src/`, `tests/`), variant data
+(`docs/variants.json`, `<{ var.* }>` in `platform_note`), a `[workflow]`
+with own skills, `[quality]` packs and a headless runner (Pharaoh, profile
+`vmodel` 21, unused profile skills removed). It builds with ubc (`ubc script
+ci`) and with Sphinx + Sphinx-Needs (`ubc script sphinx`, via `uv`); CI in
+`.github/workflows/ci-main.yml` / `ci-release.yml` (setup:
+`.github/actions/setup/action.yml`). Not used here: external needs,
+`needimport`, ubc-action.
 
 Column **Here** in §2:
 
 - **applies** — the affected feature is used here; the bug can show in this repository today.
 - **latent** — not triggered by the current content, but it will be as soon as the named feature is adopted (e.g. a `[workflow]` for Pharaoh, a parity check of the two `needs.json`).
 - **n/a** — the affected tool or feature is not used here; kept for the record and for the re-check (plan 998).
+- **avoided by design** / **not triggered** — the feature is used, but this repository's setup does not hit the bug (the reason is named); re-check when the setup changes.
+- **workaround found** — applies, and a workaround is in place (named in the entry).
 
 ## 1. useblocks tools
 
@@ -61,14 +66,14 @@ no entry is re-tested yet; re-tests follow
 | Tool | Kind | Version here | Findings made with | Used here | Section |
 |---|---|---|---|---|---|
 | ubCode (VS Code extension) + `ubc` CLI | commercial | 0.37.0 (`UBC_VERSION` in `.github/workflows/ci-main.yml` / `ci-release.yml`; extension 0.37.0) | 0.35.0; re-tested 0.37.0 (origin) | yes | §3 |
-| Pharaoh (agentic engineering, `ubc agent`, `.pharaoh/`) | commercial | in ubc 0.37.0, profile `vmodel` 21 (`docs/.pharaoh/agent/install-manifest`) | 0.35.0; re-tested 0.37.0 (origin) | skills installed, no `[workflow]` yet | §4 |
-| Sphinx-Needs | open source | **unpinned** `>=8.2` (`docs/ubproject.toml:25`, script `sphinx`; comment says verified against 8.5.0) | 8.5.0; re-tested 9.0.0 (origin) | yes | §5 |
-| Sphinx-Codelinks ("Codelinks") | open source | — | 1.4.0; re-tested 2.0.0 (origin) | no | §6 |
-| sphinx-mounts (`github.com/useblocks/sphinx-mounts`) | open source | — | 0.2.0; re-tested 0.3.0 (origin) | no | §7 |
+| Pharaoh (agentic engineering, `ubc agent`, `.pharaoh/`) | commercial | in ubc 0.37.0, profile `vmodel` 21 (`docs/.pharaoh/agent/install-manifest`) | 0.35.0; re-tested 0.37.0 (origin) | yes (`[workflow]`, `[quality]`, runner; plan 001) | §4 |
+| Sphinx-Needs | open source | **unpinned** `>=9.0` (script `sphinx` in `docs/ubproject.toml`; derived fields need 9.0); resolved 9.0.0 | 8.5.0; re-tested 9.0.0 (origin); 9.0.0 (product_demo) | yes | §5 |
+| Sphinx-Codelinks ("Codelinks") | open source | 2.0.0 (as resolved by `uv`) | 1.4.0; re-tested 2.0.0 (origin) | yes (`impl` markers, plan 001 P2) | §6 |
+| sphinx-mounts (`github.com/useblocks/sphinx-mounts`) | open source | 0.3.0 (as resolved by `uv`) | 0.2.0; re-tested 0.3.0 (origin) | yes (`src/`, `tests/` docs, plan 001 P2) | §7 |
 | useblocks/ubc-action | GitHub Action | — (CI downloads `ubc` directly) | `393f60b` | no | §8 |
 | Sphinx-Data-Viewer | open source | as resolved by `uv` | 0.1.5 | indirectly (sphinx-needs dependency) | no findings |
 | ubTrace, ubConnect | commercial | — | — | no | — |
-| Sphinx-Test-Reports (`sphinx-test-reports` + `ub-test-reports`) | open source | — | 2.0.0, 3.0.0 / 1.1.0 | no | §9 |
+| Sphinx-Test-Reports (`sphinx-test-reports` + `ub-test-reports`) | open source | 3.0.0 (as resolved by `uv`) | 2.0.0, 3.0.0 / 1.1.0 | yes (pytest JUnit, plan 001 P2; converter not used) | §9 |
 | Sphinx-Modeling, Sphinx-Collections, Sphinx-Preview, Sphinx-SimplePDF, Sphinx-EMF, Bazel-Drives-Sphinx, libpdf | open source | — | — | no | — |
 
 ## 2. Overview
@@ -92,7 +97,7 @@ documentation, convenience.
 | UB-12 | ubc + Sphinx-Needs | medium | external | latent (named variants, `if`) | `if` does not resolve named variants (`[needs.variants]`) |
 | UB-13 | ubc + Sphinx-Needs | medium | external | n/a | imported needs of an undeclared type dropped, undeclared fields stripped, silently — not reproducible on 0.37.0 / 9.0.0 (diagnostics exist) |
 | UB-14 | ubc | medium | external | applies (plan 001 P2: `code/implementations` shows the GitHub `remote-url` as plain text; local path avoided with `set_local_url = false`) | ubCode HTML: source links as plain text, absolute local path published |
-| UB-15 | ubc | low | external | latent (parity check) | `ubc build needs` exports no backlinks (`<link>_back`); Sphinx does |
+| UB-15 | ubc | low | external | applies (plan 001 P5 / P6: ubc `needs.json` has no `decides_back`, Sphinx does; parity checks compare forward links only) | `ubc build needs` exports no backlinks (`<link>_back`); Sphinx does |
 | UB-16 | ubc | medium | external | n/a | external source dropped when its `needs_schema` has `default: null` for a field declared non-nullable |
 | UB-17 | ubc + Sphinx-Needs | low | external | n/a | `needimport` ignored `id_regex` in ubc only — **resolved** with Sphinx-Needs 9.0.0 (neither checks imports) |
 | UB-18 | ubc | high | external | n/a | Sphinx-Test-Reports directives unknown — **fixed in 0.37.0** |
@@ -101,19 +106,20 @@ documentation, convenience.
 | UB-21 | ubc + Sphinx-Needs | medium | product_demo | applies (`docs/schemas.json`) | schema keyword outside the supported subset (e.g. `not`): ubc warns and applies **no** rule of the file; Sphinx aborts the build |
 | UB-22 | ubc + Sphinx-Test-Reports | medium | product_demo | applies (`tests/test_results.rst`, `[test_reports] rootdir`) | `test-file` `:file:` resolved against `rootdir` for reading but against `confdir` for the mount check; a file inside `rootdir = ".."` is "outside the root" |
 | UB-23 | ubc | low | product_demo | applies (found in plan 001 P2) | unknown keys in `[parse.parsers.*]` are accepted without a warning |
-| UB-24 | ubc + Sphinx-Needs | medium | product_demo | latent (conditional links, plan 001 P5) | link condition with an inner `[`: single brackets `ID[fp[:12]=="…"]` drop the condition silently in both tools; double brackets `ID[[fp[:12]=="…"]]` are `link_condition_invalid` in ubc but valid (and checked) in Sphinx |
+| UB-24 | ubc + Sphinx-Needs | medium | product_demo | latent (conditional links used on risks with the full 64-hex `fp`; bracketed conditions avoided) | link condition with an inner `[`: single brackets `ID[fp[:12]=="…"]` drop the condition silently in both tools; double brackets `ID[[fp[:12]=="…"]]` are `link_condition_invalid` in ubc but valid (and checked) in Sphinx |
 | UB-25 | ubc + Sphinx-Needs | medium | product_demo | applies (plan 001 P6: `dec-nested` uses the derived field `parent` instead) | schema rules cannot see the core field `parent_need` in ubc: `required: ["parent_need"]` fails for every nested need (Sphinx: only for non-nested ones) |
-| PH-01 | Pharaoh | **high** | external | latent (`[workflow]` + variants) | verdicts stored per need id only: alternatives with one id overwrite each other |
-| PH-02 | Pharaoh | **high** | external | latent (`[workflow]`; `REQ_AUTH` has variant fields) | review fingerprint ignores resolved field values and link variants |
-| PH-03 | Pharaoh | medium | external | latent (`[workflow]`) | fingerprint follows parents one level only (children / decisions flip, grandchildren not) |
-| PH-04 | Pharaoh | medium | external | latent (`[workflow]`) | backward trace of two stages with the same link + target is attributed to one stage |
-| PH-05 | Pharaoh | medium | external | latent (`[workflow]`) | workflow traces apply per need type; no per-stage filter |
+| UB-26 | ubc (docs / schema) | low | product_demo | applies (`[[source.mounts]]`, plan 001 P2) | the `ubproject.schema.json` description of `[[source.mounts]]` says `ubc check` does not read mounts — it does (diagnostics point into mounted files) |
+| PH-01 | Pharaoh | **high** | external | latent (`[workflow]` since plan 001 P3; no variant alternatives sharing one id) | verdicts stored per need id only: alternatives with one id overwrite each other |
+| PH-02 | Pharaoh | **high** | external | applies (plan 001 P8: `REQ_AUTH` reviewed while `platform_note` resolves per variant) | review fingerprint ignores resolved field values and link variants |
+| PH-03 | Pharaoh | medium | external | applies — relied on (plan 001 P5 / P8: decisions flip via `outgoing` trace edges; parent edits re-review direct children only) | fingerprint follows parents one level only (children / decisions flip, grandchildren not) |
+| PH-04 | Pharaoh | medium | external | avoided by design (plan 001: one link name per edge) | backward trace of two stages with the same link + target is attributed to one stage |
+| PH-05 | Pharaoh | medium | external | avoided by design (plan 001: one link name per edge; decisions stage edges are `outgoing`) | workflow traces apply per need type; no per-stage filter |
 | PH-06 | Pharaoh | medium | external | n/a (no imports) | `agent status` / `next` count imported (`exempt_status`) needs as stage output |
 | PH-07 | Pharaoh | low | external | n/a (no imports) | `review-brief` lists imported (`exempt_status`) needs as review targets |
-| PH-08 | Pharaoh | low | external | latent (`[workflow]`) | `agent audit` omits `value`, `tags` and `refines` / `allocates` in `trace` |
+| PH-08 | Pharaoh | low | external | latent (`ubc agent audit` used by the skills; missing fields not observed yet) | `agent audit` omits `value`, `tags` and `refines` / `allocates` in `trace` |
 | PH-09 | Pharaoh | low | external | applies (plan 001 P4: 8 own skills; drift not detected) | `doctor` checks only the `.claude` copy of project skills |
-| PH-10 | Pharaoh | low | external | applies (installed `review-*` skills) | brief / skills: `submit_command` without `-p`, `stale` bucket undocumented |
-| PH-11 | Pharaoh | low | external | applies (`.claude/skills/review-*/SKILL.md:49`) | skills document `review-brief --ids <ID,...>`, the CLI rejects the comma list; TYPE + `--ids` is refused |
+| PH-10 | Pharaoh | low | external | applies (installed `review-feat` / `-requirement` / `-decision` and the own copies `review-spec` / `-test-spec` / `-risk`) | brief / skills: `submit_command` without `-p`, `stale` bucket undocumented |
+| PH-11 | Pharaoh | low | external | applies (installed `review-*` and their own copies document `--ids <ID,...>`) | skills document `review-brief --ids <ID,...>`, the CLI rejects the comma list; TYPE + `--ids` is refused |
 | PH-12 | Pharaoh | medium | external | applies (plan 001 P3: stage `produces = "testcase"` → `undeclared_type`; no `test_results` stage, schema rules instead) | `config-validate` / `doctor`: a type declared by `[test_reports]` counts as undeclared |
 | PH-13 | Pharaoh | medium | external | n/a | outgoing trace obligation (`min = 1`) met by any link, e.g. STR's generic `links` |
 | PH-14 | Pharaoh | medium | product_demo | applies (plan 001 P3: `[workflow.lifecycle]` left out) | `[workflow.lifecycle] states` gate applies to every need: needs of types without a lifecycle (no `status`) are all `status_undeclared`; no per-type scope |
@@ -125,11 +131,11 @@ documentation, convenience.
 | PH-20 | Pharaoh | medium | product_demo | applies (plan 001 P7: CI 1 uses `scripts/ci_gates.py` instead) | `release-check` baseline unusable for a two-tier CI: help says "a JSON gap-key list", the tool wants a map of an undocumented key to a count; `--update-baseline` only writes on a passing run; missing reviews and open / proposed statuses count as gaps, no category filter |
 | PH-21 | Pharaoh | **high** | product_demo | applies (fixed in `[agent.runner]`, plan 001 P8) | `ubc agent run`: a runner that is not allowed to run `ubc` asks for approval, nobody answers headless, and every stage is reported `no change` with `ok: true` |
 | PH-22 | Pharaoh | medium | product_demo | applies (plan 001 P8 cascade) | `change-request` cascade: the code stage reports `no change` although `src/` was changed; decisions nested in the edited anchor (and risks) are not part of the cascade |
-| SN-01 | Sphinx-Needs | medium | external | latent (schemas; `sphinx` script runs `-W`) | every schema severity is a Sphinx warning; `-W` fails on `warning` rules |
+| SN-01 | Sphinx-Needs | medium | external | applies (plan 001 P3: `info` suppressed via `suppress_warnings`, violations are errors on purpose, CI 2 reads `schema_violations.json`) | every schema severity is a Sphinx warning; `-W` fails on `warning` rules |
 | SN-02 | Sphinx-Needs | medium | external | n/a | `needs_from_toml` overrides `needs_external_needs` from `conf.py` |
 | SN-03 | Sphinx-Needs | low | external | n/a | `needs.json` drops external needs by default (`builder_filter`), unlike ubc |
 | SN-04 | — | — | — | — | moved to CL-06 |
-| SN-05 | Sphinx-Needs | low | external | latent (schemas) | schema `contains` on a list field rejected without `items` (ubc accepts) |
+| SN-05 | Sphinx-Needs | low | external | not triggered (plan 001: `network_back` `contains` on link fields works in both toolchains) | schema `contains` on a list field rejected without `items` (ubc accepts) |
 | SN-06 | Sphinx-Needs | medium | external | n/a | `id_prefix` rewrites ids inside the text of imported needs (plain `str.replace`): literals changed (in this repo), ids corrupted (`BMS_SWBMS_…`, synthetic) — **changed** in 9.0.0: corruption fixed, literals still prefixed |
 | SN-07 | ubc + Sphinx-Needs | low | external | n/a | imported needs: `style` kept by ubc, dropped by Sphinx-Needs (intent undocumented) |
 | SN-08 | Sphinx-Needs | low | product_demo | applies (`docs/schemas.json`) | schema network failure: console line names the link **target** (`Need 'SPEC_HASH' has schema violations`), `schema_violations.json` names the source |
@@ -137,7 +143,7 @@ documentation, convenience.
 | CL-01 | Sphinx-Codelinks | medium | external | n/a | fails in a git worktree (`.git` must be a directory) — **fixed in 2.0.0** |
 | CL-02 | Sphinx-Codelinks | medium | external | n/a | `.c` file without compile-database entry silently skipped |
 | CL-03 | Sphinx-Codelinks + ubc | low | external | n/a (`set_local_url = false`; `remote-url` identical in both exports, plan 001 P2) | `remote-url` / `local-url` mean different things in the two exports (path vs URL, local path) — **changed** in 2.0.0: `remote-url` same, `local-url` differs |
-| CL-04 | Sphinx-Codelinks | low | external | n/a | source pages reference `_static/_static/…` (CSS 404): wrong `add_css_file` path |
+| CL-04 | Sphinx-Codelinks | low | external | n/a (`set_local_url = false`: no source pages, no Codelinks CSS, plan 001 P9) | source pages reference `_static/_static/…` (CSS 404): wrong `add_css_file` path |
 | CL-05 | Sphinx-Codelinks | medium | external | n/a | branch ref only in `packed-refs` (after `git gc`): source links to `blob/None`, warnings — **fixed in 2.0.0** |
 | CL-06 | Sphinx-Codelinks | medium | external | n/a | duplicate need id in code aborts the build (uncaught `InvalidNeedException`) — **fixed in 2.0.0** |
 | CL-07 | Sphinx-Codelinks | low | external | n/a (origin is `github.com`; no warning, plan 001 P2) | `Unsupported Git host` warning for every marker when `origin` is not a known host, although `remote_url_pattern` is set |
@@ -146,7 +152,7 @@ documentation, convenience.
 | UA-02 | ubc-action | medium | external | n/a (the direct download in CI has no checksum either, see §8) | uses `actions/cache@v4` by tag: blocked in repositories that require SHA-pinned actions; downloads into the workspace, no checksum |
 | STR-01 | Sphinx-Test-Reports | medium | external | n/a | CTest `status="disabled"` reported as `passed` |
 | STR-02 | Sphinx-Test-Reports | medium | external | n/a | converter ignores the configured case prefix; lower-case hash IDs fail a strict `id_regex` |
-| STR-03 | Sphinx-Test-Reports | high | external | n/a | type declared in `[[needs.types]]` and `[test_reports.case]` aborts the Sphinx build |
+| STR-03 | Sphinx-Test-Reports | high | external | avoided by design (plan 001: test-result types not in `[[needs.types]]`) | type declared in `[[needs.types]]` and `[test_reports.case]` aborts the Sphinx build |
 | STR-04 | Sphinx-Test-Reports + ubc | low | external | n/a | `test-results` summary `Errors: -1` in Sphinx, `0` in ubc, when the JUnit file has no `errors` attribute |
 | STR-05 | Sphinx-Test-Reports + ubc | low | external | n/a | renamed case directive (`[test_reports.case] directive`): ubc ignores the rename, Sphinx accepts it |
 | STR-06 | Sphinx-Test-Reports (docs) | low | product_demo | applies (`docs/schemas.json` `type-test-case`) | docs name the need types `test-file` / `test-suite` / `test-case`; both toolchains create `testfile` / `testsuite` / `testcase` — a schema `select` on `test-case` matches nothing, silently |
@@ -554,6 +560,25 @@ documentation, convenience.
 - **Workaround:** a derived copy, `[needs.fields.parent] schema.type = "string"`, `derive = { kind = "copy", field = "parent_need" }`, and the rule on `parent` — identical in both tools (`DEC_OUTSIDE` only).
 - **Solution A:** ubc's field resolver knows the core fields `parent_need` / `parent_needs`.
 - **Solution B:** document which core fields schema rules may reference; warn (not fail every need) when a rule names an unknown one.
+
+### UB-26 Schema docs: "`ubc check` does not read mounts" — it does
+
+- **Origin:** product_demo
+- **Tool:** ubc 0.37.0 (`ubproject.schema.json`)
+- **Marker:** `docs/ubproject.toml` `[[source.mounts]]` (`../src` at `code/`, `../tests` at `tests/`), plan 001 P2.
+- **Summary:** the schema description of `[source] mounts` says: "Mounts
+  apply to the project build. `ubc check` and `ubc format` discover files by
+  walking for the nearest configuration file, and do not read mounts." In
+  this project `ubc check` reports diagnostics located in the mounted files,
+  e.g. `warning[needs.test_report_path_outside_root] --> …/tests/test_results.rst:12:11`
+  and `warning[needs.src_trace] --> …/src/implementations.rst:10:4`, and
+  `Processing 8 files` includes them. Plan 001 first planned CI around the
+  documented behaviour (mounted docs unlinted) before it was checked.
+- **Expected:** the description matches the behaviour (or `ubc format` /
+  `ubc check` differ and the text says which).
+- **Workaround:** none needed (the behaviour is the useful one); CI relies on `ubc check` covering mounted files.
+- **Solution A:** correct the schema description.
+- **Solution B:** state explicitly which commands read mounts (`check` yes, `format` ?).
 
 ## 4. Pharaoh (`ubc agent`)
 

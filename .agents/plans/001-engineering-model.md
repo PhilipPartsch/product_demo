@@ -50,6 +50,14 @@ At the end:
 - one full pilot chain exists and passes CI 2 locally (§6 phase P8);
 - plan 100 is updated with the lessons of this run (§9).
 
+**Result (P9, 2026-10-17): all goals met.** Schema in both toolchains
+(37 needs identical); config-validate / doctor ok; `src/` + `tests/` with
+markers and JUnit, mounted; 10 own skills mirrored; model docs and reports;
+CI 1 and CI 2 green on GitHub (CI 2 on the pilot, not only locally); pilot
+"login lockout" with 12 decisions, 4 risks, 28 reviews; plan 100 updated
+(incl. the decisions / risks pattern §8.1). Not in this plan: the
+architecture level (plan 002, next).
+
 ## 1. Input brief and decisions
 
 ### 1.1 Input brief given by the user (plan 100 §2.1)
@@ -1084,3 +1092,29 @@ the end); the agent played author and reviewer, following the skills.
   `RISK_AI_LOCKOUT_VALUES` set to `closed`, re-reviewed.
 
 Findings → plan 999: PH-21, PH-22, STR-07.
+
+### P9 Retro (2026-10-17)
+
+- Learning log L1–L39 checked against plan 100: 28 were folded in during the
+  run; the missing ones folded now — routes relative to `{DOCS}` (L6),
+  manifest path bases (L7), diff brief vs. blank profile (L8), fields as a
+  pick list (L9), schema allow-lists (L13), existing values vs. new enums
+  (L15), mounts carry docs (L16), type names from `needs.json` (L18),
+  positional marker fields (L19), own review skills as copies (L28),
+  autonomous pilot + HTML review (L39). Run table: run 1 completed, run 2
+  (plan 002) planned. Before: the decisions / risks setup became the
+  suggested pattern §8.1 (user).
+- Plan 999: 20 new entries from this run (UB-20…26, PH-14…22, SN-08/09,
+  STR-06/07); "Here" of 14 imported entries updated (UB-15, PH-02, PH-03,
+  PH-10, PH-11, SN-01 now applies; PH-04 / PH-05 / STR-03 avoided by design;
+  SN-05 not triggered; PH-01, PH-08, UB-24 latent; CL-04 n/a); legend gains
+  "avoided by design / not triggered / workaround found"; §0 / §1 describe
+  the current repository. UB-26: the P2 assumption "`ubc check` does not
+  read mounts" was wrong (schema docs), `ubproject.toml` comment fixed.
+- Plan 998: T2 covers the Sphinx extensions now in use, T4 only unused
+  tools, T6 the still-latent features; §6 reproduction steps use the
+  current model (`docs/` has a `[workflow]`); new §6.4 lists the 20 entries
+  of this repository with trigger, reproduction and the workaround to remove
+  on fix; §4.7 profile-update procedure (P4 follow-up).
+- Open for the user: merge PR #2; delete the test branch
+  `release/pilot-check`; start plan 002.

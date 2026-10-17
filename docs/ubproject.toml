@@ -13,7 +13,8 @@ ignore = ["config.derive_sphinx_minimum"]
 extend_exclude = ["README.md", "_build"]
 
 # Docs that live next to the code (plan 001 P2). Only .rst / .md files are
-# mounted; `ubc check` does not read mounts, `ubc build` does.
+# mounted. `ubc check` and `ubc build` both read the mounts (the schema
+# description says otherwise, plan 999 UB-26).
 [[source.mounts]]
 dir = "../src"
 mount_at = "code"
