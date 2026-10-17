@@ -33,9 +33,15 @@ Stages
      - ``draft-requirement``
      - ``review-requirement``
      - ``requirements.rst``
+   * - ``archs``
+     - ``arch``
+     - ``fulfills`` → ``req``
+     - ``draft-architecture``
+     - ``review-arch``
+     - ``architecture.rst``
    * - ``specs``
      - ``spec``
-     - ``refines`` → ``req``
+     - ``refines`` → ``arch``
      - ``draft-spec``
      - ``review-spec``
      - ``specifications.rst``
@@ -90,7 +96,8 @@ Skills
 All skills live in ``.agents/skills/`` and are copied to ``.claude/skills/``
 and ``.github/agents/`` by ``scripts/mirror_skills.py`` (``--check`` in CI).
 
-- **Stage skills** (``draft-us``, ``draft-requirement``, ``draft-spec``,
+- **Stage skills** (``draft-us``, ``draft-requirement``,
+  ``draft-architecture``, ``draft-spec``,
   ``draft-impl``, ``draft-test-spec``) state their incoming and outgoing
   needs, the template, the status rule (only decisions and risks have a
   status), append-only editing, and when to record a decision or a risk.
@@ -128,6 +135,10 @@ Quality packs
    * - ``req``
      - ``quality/req.toml``: parent fit, atomicity, verifiability,
        unambiguity, comprehensibility, feasibility, decisions documented
+   * - ``arch``
+     - ``quality/architecture.toml``: parent fit, design clarity,
+       completeness, consistency, implementability, trust boundary
+       addressed
    * - ``spec``
      - ``quality/spec.toml``: as ``req``, judged one level down
    * - ``test_spec``

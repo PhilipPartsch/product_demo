@@ -153,4 +153,3 @@ Test specifications
 
       A fake clock is chosen because it tests the specified 900 seconds in
       no time.
-

@@ -26,13 +26,14 @@ Each arrow points from a need to the need it links to.
 
    flowchart BT
      req["req<br/>Requirement"] -- satisfies --> us["us<br/>User Story"]
-     spec["spec<br/>Specification"] -- refines --> req
+     arch["arch<br/>Architecture Element"] -- fulfills --> req
+     spec["spec<br/>Specification"] -- refines --> arch
      impl["impl<br/>Implementation<br/>(code marker)"] -- implements --> spec
      tspec["test_spec<br/>Test Specification"] -- verifies --> spec
      result["testcase<br/>Test result<br/>(Sphinx-Test-Reports)"] -- executes --> tspec
      dec["dec<br/>Decision<br/>(nested in its parent)"] -. decides .-> any1(["any need"])
      risk["risk<br/>Risk"] -. affects .-> any2(["any need"])
-     risk -. mitigated_by .-> mit(["req / spec / test_spec / dec"])
+     risk -. mitigated_by .-> mit(["req / arch / spec / test_spec / dec"])
 
 Types
 -----
@@ -56,11 +57,16 @@ Types
      - ``REQ_``
      - RST
      - ``satisfies`` → ``us``
+   * - ``arch``
+     - Architecture Element
+     - ``ARCH_``
+     - RST, with a component diagram on the page
+     - ``fulfills`` → ``req``
    * - ``spec``
      - Specification
      - ``SPEC_``
      - RST
-     - ``refines`` → ``req``
+     - ``refines`` → ``arch``
    * - ``impl``
      - Implementation
      - ``IMPL_``
@@ -85,8 +91,8 @@ Types
      - Risk
      - ``RISK_``
      - RST
-     - ``affects`` → any need; ``mitigated_by`` → ``req`` / ``spec`` /
-       ``test_spec`` / ``dec``
+     - ``affects`` → any need; ``mitigated_by`` → ``req`` / ``arch`` /
+       ``spec`` / ``test_spec`` / ``dec``
 
 Every need has an explicit id matching ``^[A-Z]+_[A-Z][A-Z0-9_]*$``.
 
@@ -143,6 +149,10 @@ Fields
    * - ``security_relevant``
      - all authored types (required)
      - ``true`` / ``false``
+   * - ``trust_boundary``
+     - ``arch`` (required)
+     - ``true`` / ``false``: the element takes input from outside or changes
+       privileges
    * - ``test_level``
      - ``test_spec`` (required)
      - ``unit`` / ``integration`` / ``system``
@@ -187,10 +197,14 @@ Links
      - satisfies
      - satisfied by
      - ``req`` → ``us``
+   * - ``fulfills``
+     - fulfills
+     - fulfilled by
+     - ``arch`` → ``req``
    * - ``refines``
      - refines
      - refined by
-     - ``spec`` → ``req``
+     - ``spec`` → ``arch``
    * - ``implements``
      - implements
      - implemented by
@@ -214,7 +228,7 @@ Links
    * - ``mitigated_by``
      - mitigated by
      - mitigates
-     - ``risk`` → ``req`` / ``spec`` / ``test_spec`` / ``dec``
+     - ``risk`` → ``req`` / ``arch`` / ``spec`` / ``test_spec`` / ``dec``
 
 Each link connects exactly one pair of types, so every edge of the model can
 be checked on its own.
@@ -254,11 +268,14 @@ needs zero.
    * - ``fields-test-spec``
      - violation
      - a ``test_spec`` has a ``test_level``
+   * - ``fields-arch``
+     - violation
+     - an ``arch`` states ``trust_boundary``
    * - ``fields-risk``
      - violation
      - a ``risk`` has ``risk_category``, ``severity`` and ``likelihood``
-   * - ``link-req-us``, ``link-spec-req``, ``link-impl-spec``,
-       ``link-tspec-spec``
+   * - ``link-req-us``, ``link-arch-req``, ``link-spec-arch``,
+       ``link-impl-spec``, ``link-tspec-spec``
      - violation
      - at least one up-link, and only to the allowed type
    * - ``link-result-tspec``
@@ -289,10 +306,11 @@ Completeness rules (info):
 
    * - Rule
      - Reports
-   * - ``cov-us``, ``cov-req``, ``cov-spec-impl``, ``cov-spec-test``,
-       ``cov-tspec-result``
+   * - ``cov-us``, ``cov-req``, ``cov-arch``, ``cov-spec-impl``,
+       ``cov-spec-test``, ``cov-tspec-result``
      - a need not yet covered downstream (user story without requirement,
-       requirement without specification, specification without
+       requirement without architecture element, architecture element
+       without specification, specification without
        implementation or test specification, test specification without test
        result)
    * - ``dec-present``
@@ -307,4 +325,4 @@ Current needs
 -------------
 
 .. needflow::
-   :filter: type in ["us", "req", "spec", "impl", "test_spec", "dec", "risk"]
+   :filter: type in ["us", "req", "arch", "spec", "impl", "test_spec", "dec", "risk"]

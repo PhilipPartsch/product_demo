@@ -62,6 +62,7 @@
           "enum": [
             "us",
             "req",
+            "arch",
             "spec",
             "impl",
             "test_spec",
@@ -76,6 +77,7 @@
         "type": {
           "enum": [
             "req",
+            "arch",
             "spec",
             "test_spec",
             "dec"
@@ -89,6 +91,7 @@
           "enum": [
             "us",
             "req",
+            "arch",
             "spec",
             "impl",
             "test_spec",
@@ -123,6 +126,7 @@
           "enum": [
             "us",
             "req",
+            "arch",
             "spec",
             "impl",
             "test_spec",
@@ -164,6 +168,13 @@
       "required": [
         "status"
       ]
+    },
+    "type-arch": {
+      "properties": {
+        "type": {
+          "const": "arch"
+        }
+      }
     }
   },
   "schemas": [
@@ -265,6 +276,21 @@
       }
     },
     {
+      "id": "fields-arch",
+      "severity": "violation",
+      "message": "an architecture element states whether it sits on a trust boundary",
+      "select": {
+        "$ref": "#/$defs/type-arch"
+      },
+      "validate": {
+        "local": {
+          "required": [
+            "trust_boundary"
+          ]
+        }
+      }
+    },
+    {
       "id": "fields-risk",
       "severity": "violation",
       "message": "a risk needs risk_category, severity and likelihood",
@@ -311,9 +337,38 @@
       }
     },
     {
-      "id": "link-spec-req",
+      "id": "link-arch-req",
       "severity": "violation",
-      "message": "a specification refines at least one requirement, and only requirements",
+      "message": "an architecture element fulfills at least one requirement, and only requirements",
+      "select": {
+        "$ref": "#/$defs/type-arch"
+      },
+      "validate": {
+        "local": {
+          "required": [
+            "fulfills"
+          ],
+          "properties": {
+            "fulfills": {
+              "minItems": 1
+            }
+          }
+        },
+        "network": {
+          "fulfills": {
+            "items": {
+              "local": {
+                "$ref": "#/$defs/type-req"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "link-spec-arch",
+      "severity": "violation",
+      "message": "a specification refines at least one architecture element, and only architecture elements",
       "select": {
         "$ref": "#/$defs/type-spec"
       },
@@ -332,7 +387,7 @@
           "refines": {
             "items": {
               "local": {
-                "$ref": "#/$defs/type-req"
+                "$ref": "#/$defs/type-arch"
               }
             }
           }
@@ -588,9 +643,29 @@
     {
       "id": "cov-req",
       "severity": "info",
-      "message": "a requirement is refined by at least one specification",
+      "message": "a requirement is fulfilled by at least one architecture element",
       "select": {
         "$ref": "#/$defs/type-req"
+      },
+      "validate": {
+        "network_back": {
+          "fulfills": {
+            "contains": {
+              "local": {
+                "$ref": "#/$defs/type-arch"
+              }
+            },
+            "minContains": 1
+          }
+        }
+      }
+    },
+    {
+      "id": "cov-arch",
+      "severity": "info",
+      "message": "an architecture element is refined by at least one specification",
+      "select": {
+        "$ref": "#/$defs/type-arch"
       },
       "validate": {
         "network_back": {

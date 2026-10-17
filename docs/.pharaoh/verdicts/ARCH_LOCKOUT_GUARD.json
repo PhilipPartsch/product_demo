@@ -1,0 +1,37 @@
+{
+  "agent": "claude-code",
+  "axes": {
+    "completeness": {
+      "reason": "Counter, lock, reset and the internal-only access are covered.",
+      "score": 2
+    },
+    "consistency": {
+      "reason": "Describes three interfaces (check / record failure / record success); the code offers one call `attempt(account, check_password)` that does all three.",
+      "score": 1,
+      "suggestion": "Align the interface description with lockout.py or change the code."
+    },
+    "design_clarity": {
+      "reason": "Clear single responsibility.",
+      "score": 2
+    },
+    "implementability": {
+      "reason": "Implemented in lockout.py.",
+      "score": 2
+    },
+    "parent_fit": {
+      "reason": "Fulfills REQ_LOCKOUT one to one.",
+      "score": 2
+    },
+    "trust_boundary_addressed": {
+      "reason": "Correctly internal; explains that inputs cross at the Authentication Service.",
+      "score": 2
+    }
+  },
+  "criteria": "architecture",
+  "criteria_fingerprint": "f7823973fc1538b3c4bf605cd2056d62f272a7669bd6a747ba24689abcf6eae4",
+  "model": "claude-opus-5-5",
+  "need": "ARCH_LOCKOUT_GUARD",
+  "reviewed_fingerprint": "d44fbe59685acd0212c69bc5625aa4c19b33923884fb185f7d6fc8e343e9aea2",
+  "schema": 2,
+  "summary": "pilot review (plan 001 P8)"
+}

@@ -30,8 +30,9 @@ Rules (as in plan 001):
 - **One link name per edge**; links, workflow traces and schema rules change
   together (plan 100 §4).
 - **Tool bugs go into plan 999** in the same session.
-- Work on branch `feat/engineering-model`; nothing is committed until the
-  user asks.
+- Work on branch `feat/arch-level` (from `main` after PR #2); nothing is
+  committed until the user asks; the model change lands on `main` in **one**
+  merge (CI 1 ratchets structural gaps).
 
 ## 0. Goal
 
@@ -140,6 +141,17 @@ Proposal (Q-TEST): unchanged — `test_spec` verifies `spec` only. Integration
 tests that verify `arch` need their own link and stage (a trace edge has one
 `up` type, PH-04 / PH-05) and are a later change.
 
+### 2.8 Re-check against the state plan 001 left (2026-10-17, before Q0)
+
+| Point | As written (after 001 P4) | State after 001 P9 | Consequence |
+|---|---|---|---|
+| Needs to migrate | `REQ_AUTH`, `REQ_LOG` | + `REQ_LOCKOUT`; specs `SPEC_HASH`, `SPEC_AUDIT`, `SPEC_LOCKOUT` | a third `arch` (lockout guard) or the guard inside the auth component (Q-MIG) |
+| Decisions | attach as before | `dec-present` on us / req / spec / test_spec; `decisions` stage has one `outgoing` `decides` edge per parent type | Q-DEC = yes → `arch` in `type-decision-required` **and** a `decides` edge `up = "arch"`; each new `arch` gets a nested decision |
+| Reviews | specs outdated | 28 verdicts | re-linking the specs outdates them, their nested decisions (option F) and probably their requirements (one-hop); new verdicts for `arch` + decisions |
+| Risks | — | hash conditions on `SPEC_*` (`RISK_LOCKOUT_DOS`, `RISK_LOCKOUT_RESTART`, `RISK_AUDIT_VOLATILE`) | re-linking changes the specs' `fp` → these risks go stale → re-evaluate, `refresh_risk_links.py` (a real test of the mechanism) |
+| CI | — | CI 1 ratchets structural gaps, CI 2 strict | one merge for the whole change |
+| Further places | model page, `draft-spec` | + `engineering_model/workflow.rst`, `decisions_risks.rst`, `reports/decisions.rst` (type list of "needs without a decision"), template `spec.rst` (`:refines: {{REQ_ID}}`), `draft-requirement` ("specs refine the requirement"), playbook §8.1 (parent types) | added to Q1–Q4 |
+
 ## 3. Migration of the existing needs
 
 Proposal (Q-MIG):
@@ -246,15 +258,68 @@ Q-MIG (§3 split into components), Q-HOW (§3). Record the answers in §7.
 | Question | Answer |
 |---|---|
 | Q-WHEN | **b — after plan 001 P9**, as a second playbook run (user, 2026-10-17). Before Q0: re-check §2–§3 against the state plan 001 leaves (verdicts exist then, CI tiers are active) |
-| link names | |
-| Q-FIELD | |
-| Q-DEC | |
-| Q-TEST | |
-| Q-MIG | |
-| Q-HOW | |
+| link names | `fulfills` (arch → req, new) + `refines` (spec → arch, target type changes) |
+| Q-FIELD | yes — `trust_boundary` (bool, required on `arch`); review axis `trust_boundary_addressed` |
+| Q-DEC | **no** — decisions on `arch` optional: `arch` not in `dec-present`, no `decisions_documented` axis in its pack; the `decisions` stage still gets an `outgoing` `decides` edge → `arch` so an optional decision is watched for staleness (no gaps) |
+| Q-TEST | not now — `test_spec` verifies `spec` only |
+| Q-MIG | "does not matter, all test data are removed later" → three elements matching the modules: `ARCH_AUTH` (`REQ_AUTH`), `ARCH_LOCKOUT` (`REQ_LOCKOUT`), `ARCH_AUDIT` (`REQ_LOG`) |
+| Q-HOW | through the workflow: `draft-architecture` via the headless runner, re-link with `change-request`; failures fixed and logged |
+| Evaluation | autonomous run of Q1–Q4 incl. reviews; the user reviews the HTML at the end (as plan 001 P8) |
 
 ## 8. Learning log
 
 | # | Phase | Question / finding | Answer | → Plan 100 |
 |---|---|---|---|---|
+| M2 | Q0 | the demo content is test data that is removed later (user) | migration kept minimal | plan 100: ask early whether the content is real or demo data (it decides how much migration care is needed) |
+| M3 | migration | the headless runner skipped a skill step (`record-risk` sign-off) in 2 of 3 runs | operator re-ran the step | plan 100: verify every runner output against the skill's checklist (here: risk links without `fp`) |
+| M4 | migration | `draft-architecture` invented an HTTP / session design not in requirements or code; `change-request` turned it into new specs | reverted; grounding rule in the skill | plan 100 §4: stage skills ground new elements in requirements + existing code |
+| M5 | migration | `change-request` cannot re-link existing needs to a new parent (PH-23) | re-link by hand | plan 100 "changing a model later": re-linking is a manual (or scripted) step |
+| M6 | reviews | re-linking a spec outdated only the spec, not its nested decision or its requirement | re-reviewed the specs | plan 100: expect re-reviews where content or parents change |
 | M1 | discussion | an architecture level was not asked for in the brief; it came up when comparing the installed skills with the model | plan 002 | §2.2 Q-TYPES: ask explicitly whether an architecture level is needed |
+
+## 9. Run log
+
+### Q1–Q4 (2026-10-17, autonomous; branch `feat/arch-level`)
+
+- Q0: decisions in §7 (links `fulfills` / `refines`; `trust_boundary`;
+  decisions on `arch` optional; no integration test level; three elements;
+  migration through the workflow; autonomous + HTML review). Re-check §2.8.
+- Q1: type `arch` (`ARCH_`), link `fulfills`, field `trust_boundary`;
+  `schemas.json`: `type-arch`, `link-arch-req`, `link-spec-req` →
+  `link-spec-arch`, `fields-arch`, `cov-req` (now `fulfills_back` arch),
+  `cov-arch`, `arch` in the shared type lists (not in
+  `type-decision-required`); `docs/architecture.rst` in the toctree.
+- Q2: stage `archs` (`draft-architecture` / `review-arch`, trace
+  `fulfills` up `req`, scope stream), `specs` depends on `archs` and traces
+  `refines` up `arch`; `decisions` stage edge `decides` → `arch`; pack
+  `docs/quality/architecture.toml` (installed `arch.toml` +
+  `trust_boundary_addressed`); config-validate ok.
+- Q3: template `arch.rst`; skills `draft-architecture` (from `draft-spec`)
+  and `review-arch` (copy); `draft-spec` (parent `arch`),
+  `draft-requirement` (downstream `archs`), template `spec.rst`; 12 own
+  skills mirrored. Docs: model page, `workflow.rst`, `decisions_risks.rst`.
+- Migration through the workflow (`ubc agent run --id REQ_*`, runner
+  sonnet): `ARCH_AUTH_SERVICE`, `ARCH_LOCKOUT_GUARD`, `ARCH_AUDIT_LOGGER`
+  with nested decisions (`DEC_ARCH_AUTH_SESSION`, `…_LOCKOUT_SEPARATION`,
+  `…_AUDIT_SEPARATION`, all `proposed`) and 4 risks (`open`). Operator
+  fixes: `record-risk` sign-off missing on 3 risks → refreshed (M3);
+  `ARCH_AUTH_SERVICE` invented `POST /login` + server-side sessions → trimmed
+  to the real scope, `DEC_ARCH_AUTH_SESSION` removed, transport risk
+  reworded (M4); `**Responsibility**` labels added.
+- Re-link: `change-request --id ARCH_AUTH_SERVICE` authored `SPEC_SESSION` /
+  `TSPEC_SESSION` (`:status: draft`) instead of re-linking `SPEC_HASH`
+  (PH-23) → reverted; the 3 specs re-linked by hand (`:refines: ARCH_…`);
+  risks re-evaluated and signed off.
+- Reviews: 12 verdicts (3 `arch`, 2 decisions, 4 risks, 3 re-reviewed
+  specs); `verdict-check` clean. Honest findings kept as 1-scores:
+  `ARCH_AUTH_SERVICE` / `ARCH_LOCKOUT_GUARD` `consistency` (the code does not
+  wire the three modules; the guard's interface is one `attempt()` call).
+- Checks: CI 1 steps all green; CI 2 blocks only on the user's items (2
+  proposed decisions, 4 open risks); 46 needs identical in ubc and Sphinx.
+- Findings → plan 999: PH-23; plan 998: §4.7 / §6.4 updated.
+- HTML review (user): "i do not care about the test data" → content
+  decisions delegated: `DEC_ARCH_LOCKOUT_SEPARATION`,
+  `DEC_ARCH_AUDIT_SEPARATION` accepted; the 4 new risks accepted by the new
+  accepted `DEC_ARCH_ACCEPT_DEMO_GAPS` (nested in `ARCH_AUTH_SERVICE`);
+  consistency gaps left as review findings. 13 re-reviews; CI 2 steps
+  locally all green.

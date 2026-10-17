@@ -9,6 +9,7 @@ else changes. Field values and links follow `docs/ubproject.toml` and
 |---|---|---|---|
 | `us.rst` | `us` | `draft-us` | `docs/user_stories.rst` |
 | `req.rst` | `req` | `draft-requirement` | `docs/requirements.rst` |
+| `arch.rst` | `arch` | `draft-architecture` | `docs/architecture.rst` |
 | `spec.rst` | `spec` | `draft-spec` | `docs/specifications.rst` |
 | `test_spec.rst` | `test_spec` | `draft-test-spec` | `docs/verification.rst` |
 | `dec.rst` | `dec` | `record-dec` | nested inside the need it decides |

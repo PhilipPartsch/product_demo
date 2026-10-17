@@ -13,7 +13,8 @@ Decisions
   decides it automatically (``decides`` is copied from the parent). A
   decision outside a need is a schema violation (``dec-nested``).
 - Every user story, requirement, specification and test specification needs
-  at least one decision (``dec-present``).
+  at least one decision (``dec-present``); on architecture elements
+  decisions are optional.
 - Status: ``proposed`` → ``accepted`` → ``superseded``. A proposed decision
   is allowed on ``main`` and blocks a release.
 - **Kept up to date by reviews:** when a decision's parent changes, the
@@ -27,7 +28,8 @@ Risks
 
 - A risk (``risk``) lives in ``risks.rst`` and links the needs it
   ``affects`` and, once mitigated, the needs it is ``mitigated_by``
-  (requirements, specifications, test specifications, decisions).
+  (requirements, architecture elements, specifications, test
+  specifications, decisions).
 - Status: ``open`` → ``mitigated`` / ``accepted`` → ``closed``. A mitigated
   risk names its mitigation; an accepted risk is decided by an accepted
   decision. An open risk is allowed on ``main`` and blocks a release.

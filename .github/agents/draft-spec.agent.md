@@ -6,8 +6,8 @@ description: Draft specifications that refine requirements into implementable, t
 # Draft a specification
 
 The produced need is one specification (`spec`): HOW one or more
-requirements are met — a design element with its behaviour and limits,
-specific enough to implement and to test.
+architecture elements are realised — a design element with its behaviour
+and limits, specific enough to implement and to test.
 
 Pass `-p <project path>` on every `ubc agent` command. `<project path>` is the
 directory that holds the target `ubproject.toml` (here `docs/`). Resolve it once
@@ -27,18 +27,19 @@ reading `.rst` files.
 
 ## Incoming and outgoing needs
 
-- **Incoming:** the requirement(s) in your briefing (`req`, anchor and
-  related needs). Read each with `ubc agent audit --id <REQ_ID>`.
+- **Incoming:** the architecture element(s) in your briefing (`arch`,
+  anchor and related needs) and, through their `fulfills` links, the
+  requirements they fulfill. Read each with `ubc agent audit --id <ID>`.
 - **Outgoing:** `spec` needs in `docs/specifications.rst`, template
-  `.agents/templates/spec.rst`; link `:refines:` to every requirement the
-  specification realises (at least one, only `req` ids — schema rule
-  `link-spec-req`); fields `safety_relevant`, `security_relevant`
+  `.agents/templates/spec.rst`; link `:refines:` to every architecture
+  element the specification details (at least one, only `arch` ids — schema
+  rule `link-spec-arch`); fields `safety_relevant`, `security_relevant`
   (required).
 - **Downstream:** `code` stage (`impl` `implements` → `spec`) and
   `test_specs` stage (`test_spec` `verifies` → `spec`): write so that both
   can be derived without guessing.
-- **Coverage:** every requirement in the briefing is refined by at least one
-  specification (trace gate `refines`, schema rule `cov-req`).
+- **Coverage:** every architecture element in the briefing is refined by at
+  least one specification (trace gate `refines`, schema rule `cov-arch`).
 
 ## Propose before you author
 
@@ -46,9 +47,9 @@ Do NOT write anything yet. First present a short, scannable outline and ask
 the user to approve or adjust it:
 
 - per specification: id (`SPEC_` prefix), title, one-sentence summary of
-  the design, the requirement(s) it refines, `safety_relevant` /
+  the design, the architecture element(s) it refines, `safety_relevant` /
   `security_relevant`,
-- how the requirements are split across specifications,
+- how the architecture elements are split across specifications,
 - the decisions (title, chosen option, rejected alternatives) and risks
   (title, category, severity, likelihood) you will hand over.
 

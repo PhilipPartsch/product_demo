@@ -125,6 +125,10 @@ architecture level (plan 002, next).
 
 ## 2. Types
 
+> Changed by [plan 002](002-add-arch-level.md): an architecture level
+> `arch` (`fulfills` → `req`) sits between `req` and `spec`; `spec`
+> `refines` → `arch`. The tables below describe the state plan 001 built.
+
 | # | Directive | Title | Prefix | Authored as | Up-link |
 |---|---|---|---|---|---|
 | 1 | `us` | User Story | `US_` | RST | — |
