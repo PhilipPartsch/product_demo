@@ -1,0 +1,29 @@
+{
+  "agent": "claude-code",
+  "axes": {
+    "affected_complete": {
+      "reason": "SPEC_AUDIT and REQ_LOG are affected.",
+      "score": 2
+    },
+    "cause_and_effect": {
+      "reason": "In-memory log, restart, lost trail — clear.",
+      "score": 2
+    },
+    "mitigation_fit": {
+      "reason": "Accepted by DEC_AUDIT_FORMAT for the demo, with the follow-up named.",
+      "score": 2
+    },
+    "rating_justified": {
+      "reason": "Likelihood high fits (every restart), but severity medium is optimistic for a security audit trail.",
+      "score": 1,
+      "suggestion": "Consider severity high once the product is deployed."
+    }
+  },
+  "criteria": "risk",
+  "criteria_fingerprint": "bd448ff69df96523d6eb0c14b91e5bdd30f11d9f1cf148002506adee9f946a4f",
+  "model": "claude-opus-5-5",
+  "need": "RISK_AUDIT_VOLATILE",
+  "reviewed_fingerprint": "671e198792a664b6cee91c6bf02acc5652b13897bac14f1181daf1fe61f2e772",
+  "schema": 2,
+  "summary": "pilot review (plan 001 P8)"
+}

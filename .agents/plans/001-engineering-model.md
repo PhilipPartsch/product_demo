@@ -611,6 +611,10 @@ decision, consequence for plan 100.
 | L33 | P6 | derived fields need Sphinx-Needs >= 9.0 and raise an `info` that `--deny info` turns into a failure | pin + lint ignore | §4 rule |
 | L34 | P7 | `release-check` cannot implement a tier that allows missing reviews / open statuses, and cannot adopt existing debt | own gate script on `ubc agent gaps` / `verdict-check` | §5 CI blueprint: own gate script per tier |
 | L35 | P7 | tier switches: ubc `UBCODE_CONFIG_OVERRIDE` (`lint.ignore`, safe because `[lint]` has nothing else) and an env var read by `conf.py`; local default = strict | CI 1 env | §5 |
+| L36 | P8 | a headless runner needs explicit tool permissions; without them the engine reports "no change" | `--allowedTools` in `[agent.runner]` | §1 Q-RUNNER: include the permissions; dry-run `ubc agent run` once |
+| L37 | P8 | `change-request` must be tested against a *committed* baseline; uncommitted chains look new, not changed | scratch clone with a commit | §3 D P8 |
+| L38 | P8 | the cascade's code stage is unreliable, and tests that read code constants hide it | tests use specified values literally | §4 rule |
+| L39 | P8 | user chose an autonomous pilot with HTML review instead of per-artefact approvals | agent authors and reviews, user reviews the result | §2.2 Q-EVAL: offer "autonomous pilot + HTML review" |
 | L5 | plan review | how CI gets the ubc license | ask open vs. closed repo; key only for closed repos, stored by the user as CI secrets | §1 `{REPO_VISIBILITY}`, `{UBC_LICENSE}`, §5 |
 
 ## 10. Run log
@@ -1022,6 +1026,61 @@ Findings → plan 999: UB-25 applies.
   gaps, 8 missing verdicts).
 - References to `docs.yml` updated in plans 998 / 999; `ci.rst` documents
   the gates.
-- Open: a real CI run on GitHub (G7) — needs a push of the branch (user).
+- G7: commit `8a34c92`, PR #2 (`feat/engineering-model` → `main`):
+  `ci-main` green on GitHub (run 39055932589, 38 s) — tests 2 passed, ubc
+  check / html, Sphinx `-W`, `config-validate` / `doctor` ok, gaps 0 new (8
+  open allowed), 0 blocking verdicts, 0 stale risks, 10 skills in sync. The
+  `ubc agent` commands need no license key in CI (public repository).
+  `ci-release` not run yet (fails by design until P8).
+- **G7 closed (user, 2026-10-17)** on the green CI 1 run; the CI 2 run moves
+  to P8 (it must pass once the pilot is done).
 
 Findings → plan 999: PH-20.
+
+### P8 Pilot (2026-10-17)
+
+Run autonomously (user: no per-artefact approvals, review of the HTML at
+the end); the agent played author and reviewer, following the skills.
+
+- New feature "login lockout": `US_LOCKOUT` → `REQ_LOCKOUT` (5 failures,
+  15 minutes) → `SPEC_LOCKOUT` (900 s, injectable clock) → `IMPL_LOCKOUT`
+  (`src/product_demo/lockout.py`) → `TSPEC_LOCKOUT` → 2 pytest tests
+  (`executes`). Risks: `RISK_LOCKOUT_DOS` (accepted by
+  `DEC_REQ_LOCKOUT_LIMITS`), `RISK_LOCKOUT_RESTART` (accepted by
+  `DEC_LOCKOUT_STATE`), `RISK_AUDIT_VOLATILE` (accepted by
+  `DEC_AUDIT_FORMAT`), `RISK_AI_LOCKOUT_VALUES` (`ai-workflow`, mitigated by
+  the recorded decision + the user's HTML review).
+- Decisions: 12, nested, all `accepted`; every `us` / `req` / `spec` /
+  `test_spec` has one; `decides` copied from the parent except where a
+  decision also accepts a risk (explicit, parent first).
+- Review findings acted on: `SPEC_HASH` (salt, stored format, constant-time
+  compare) and `SPEC_AUDIT` (record fields, order) made precise; the two old
+  test specs rewritten to the template. A spec change made
+  `RISK_AUDIT_VOLATILE` stale → re-evaluated, signed off.
+- Reviews: 28 verdicts (us 3, req 3, spec 3, test_spec 3, dec 12, risk 4),
+  scores with reasons; `verdict-check` clean. Lower scores (1) kept with
+  suggestions (e.g. `TSPEC_HASH` / `TSPEC_AUDIT` spec coverage,
+  `RISK_AI_LOCKOUT_VALUES` mitigation pending the user).
+- `change-request` (scratch clone, lockout chain committed, 15 → 10
+  minutes): run 1 / 2 — runner blocked on Bash, all stages "no change",
+  `ok: true` (PH-21); run 3 with `--allowedTools` — spec, code and test spec
+  reconciled, also the decision nested in the test spec; not reconciled: the
+  decision nested in the edited requirement and the risk texts (PH-22) —
+  flagged by option F / hash conditions; run 4 (permanent config) — spec and
+  test spec changed, code **not**, tests stayed green because they read the
+  code's constant → tests now use the specified values literally (a mismatch
+  fails), rule added to `draft-test-spec`.
+- Runner config: `--allowedTools "Bash(*/ubc *)" "Bash(ubc *)" "Bash(python3
+  scripts/*)"` (`Bash(*/ubc:*)` does not match absolute paths).
+- Sphinx incremental build kept old test results (STR-07) → `sphinx`
+  script uses `-E`.
+- Final state: CI 2 steps locally all green (`--deny info`, empty
+  `schema_violations.json`, 0 gaps, all verdicts fresh and passing, trace
+  ok, mirrors in sync); 37 needs identical in ubc and Sphinx; option F seen
+  in practice (a changed test spec outdated its nested decision).
+
+- **G8 (user, 2026-10-17): "ok"** on the HTML review — lockout values (5
+  failures, 15 minutes) and the accepted risks confirmed;
+  `RISK_AI_LOCKOUT_VALUES` set to `closed`, re-reviewed.
+
+Findings → plan 999: PH-21, PH-22, STR-07.

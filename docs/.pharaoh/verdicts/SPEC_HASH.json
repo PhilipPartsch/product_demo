@@ -1,0 +1,40 @@
+{
+  "agent": "claude-code",
+  "axes": {
+    "atomicity": {
+      "reason": "One design element: hash storage and verification.",
+      "score": 2
+    },
+    "comprehensibility": {
+      "reason": "Clear.",
+      "score": 2
+    },
+    "decisions_documented": {
+      "reason": "DEC_HASH_ALGO records scrypt and its parameters.",
+      "score": 2
+    },
+    "feasibility": {
+      "reason": "Implemented in auth.py.",
+      "score": 2
+    },
+    "parent_fit": {
+      "reason": "Realises the storage side of REQ_AUTH: passwords are only kept as salted hashes.",
+      "score": 2
+    },
+    "unambiguity": {
+      "reason": "Concrete after the review fix (salt size, format); algorithm and parameters in DEC_HASH_ALGO.",
+      "score": 2
+    },
+    "verifiability": {
+      "reason": "Salt length, stored format and constant-time comparison are checkable.",
+      "score": 2
+    }
+  },
+  "criteria": "spec",
+  "criteria_fingerprint": "9476ed745aac678fbff56b38696478ed16eed75f93417ac547efe1fc877d2772",
+  "model": "claude-opus-5-5",
+  "need": "SPEC_HASH",
+  "reviewed_fingerprint": "a79050b43dfc7c159484f8df8d26fafee56716c3c2317fc6dcaf6b15ddaa934f",
+  "schema": 2,
+  "summary": "pilot review (plan 001 P8)"
+}

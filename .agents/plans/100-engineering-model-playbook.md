@@ -246,6 +246,13 @@ From tool facts (re-check on new versions):
   prompt orders every new need to link ALL needs of its up type (PH-16).
   Dry-run every stage with `ubc agent prompt --stage <id> --id <anchor>`
   (in a scratch copy without review holds) before the pilot.
+- **Tests use specified values literally** (limits, durations, formats),
+  never the code's constants — otherwise a code change missed by a
+  `change-request` cascade stays green (001 P8, PH-22).
+- **Headless runner:** give it `--allowedTools` for `ubc` (`Bash(*/ubc *)` —
+  prompts use the absolute path) and the project scripts; without them every
+  stage is reported "no change" (PH-21). Test `change-request` in a clone
+  with the chain committed.
 - **Commands in skills:** only `ubc agent` takes `-p`; `ubc check` /
   `ubc build` take the project path as argument, `ubc script` takes
   `--path`. Run every command a skill names once.

@@ -118,6 +118,10 @@ link to it), then call `record-dec` / `record-risk` once per payload.
   guess or fabricate.** Write `[NEEDS CLARIFICATION: <exactly what you need to
   know>]` in the body and stop; also record an `ai-workflow` risk for it.
 - Pass criteria are observable; no "works correctly".
+- Tests use the **specified values literally** (limits, durations, formats
+  from the specification), never the code's own constants: a test that
+  reads the constant stays green when code and specification disagree
+  (seen in plan 001 P8 after a `change-request` cascade).
 - Every test specification has exactly one pytest test that records its id
   as `executes`.
 - The `:id:` uses the `TSPEC_` prefix and matches `^[A-Z]+_[A-Z][A-Z0-9_]*$`.

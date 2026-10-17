@@ -123,6 +123,8 @@ documentation, convenience.
 | PH-18 | Pharaoh | medium | product_demo | applies (plan 001 P4 follow-up: 11 skills removed, 2 replaced) | no way to opt out of preset assets: `ubc agent update` re-adds removed skills to the manifest and restores them on the next run; a replaced skill is a conflict on every run (`ok: false`); `doctor` errors on an edited installed skill |
 | PH-19 | Pharaoh | medium | product_demo | workaround found (plan 001 P5: `outgoing` trace edges on the decisions / risks stages) | verdict fingerprints ignore cross-cutting links: a `dec` / `risk` stays fresh when what it decides / affects / is mitigated by changes; `impact` does not reach nested decisions; a parent's fingerprint includes its nested decisions' text |
 | PH-20 | Pharaoh | medium | product_demo | applies (plan 001 P7: CI 1 uses `scripts/ci_gates.py` instead) | `release-check` baseline unusable for a two-tier CI: help says "a JSON gap-key list", the tool wants a map of an undocumented key to a count; `--update-baseline` only writes on a passing run; missing reviews and open / proposed statuses count as gaps, no category filter |
+| PH-21 | Pharaoh | **high** | product_demo | applies (fixed in `[agent.runner]`, plan 001 P8) | `ubc agent run`: a runner that is not allowed to run `ubc` asks for approval, nobody answers headless, and every stage is reported `no change` with `ok: true` |
+| PH-22 | Pharaoh | medium | product_demo | applies (plan 001 P8 cascade) | `change-request` cascade: the code stage reports `no change` although `src/` was changed; decisions nested in the edited anchor (and risks) are not part of the cascade |
 | SN-01 | Sphinx-Needs | medium | external | latent (schemas; `sphinx` script runs `-W`) | every schema severity is a Sphinx warning; `-W` fails on `warning` rules |
 | SN-02 | Sphinx-Needs | medium | external | n/a | `needs_from_toml` overrides `needs_external_needs` from `conf.py` |
 | SN-03 | Sphinx-Needs | low | external | n/a | `needs.json` drops external needs by default (`builder_filter`), unlike ubc |
@@ -148,6 +150,7 @@ documentation, convenience.
 | STR-04 | Sphinx-Test-Reports + ubc | low | external | n/a | `test-results` summary `Errors: -1` in Sphinx, `0` in ubc, when the JUnit file has no `errors` attribute |
 | STR-05 | Sphinx-Test-Reports + ubc | low | external | n/a | renamed case directive (`[test_reports.case] directive`): ubc ignores the rename, Sphinx accepts it |
 | STR-06 | Sphinx-Test-Reports (docs) | low | product_demo | applies (`docs/schemas.json` `type-test-case`) | docs name the need types `test-file` / `test-suite` / `test-case`; both toolchains create `testfile` / `testsuite` / `testcase` — a schema `select` on `test-case` matches nothing, silently |
+| STR-07 | Sphinx-Test-Reports | medium | product_demo | applies (worked around with `sphinx-build -E`) | the JUnit file of a `test-file` is not a build dependency: an incremental Sphinx build keeps the old test results (new cases missing) |
 
 ## 3. ubc / ubCode
 
@@ -924,6 +927,38 @@ are `bms_block`s of stage `bms_allocation`. Workaround: `direction =
 - **Solution A:** document the key; add `release-check --write-baseline`.
 - **Solution B:** `release-check --allow <category>` per tier.
 
+### PH-21 Runner without tool permission: every stage "no change", `ok: true`
+
+- **Origin:** product_demo
+- **Tool:** ubc 0.37.0 (`agent run`), Claude Code 2.1.224 as runner
+- **Marker:** branch `feat/engineering-model` (plan 001 P8, uncommitted) and a scratch clone with the lockout chain committed; `[agent.runner] command = "claude -p --permission-mode acceptEdits --output-format stream-json --verbose"` (as the `vmodel` profile's example suggests).
+- **Summary:** `ubc agent run --skill change-request --id REQ_LOCKOUT` after
+  changing "15" to "10 minutes": the runner's first step is
+  `/Users/…/ubc agent impact …`; `acceptEdits` does not allow Bash, so the
+  headless runner replies "I'm being blocked from running the `ubc` CLI
+  pending your approval" and stops. The engine reports
+  `specs(no change), code(no change), test_specs(no change)`, `ok: true`.
+- **Expected:** a runner that ends without doing its task (permission
+  denial, question to the user) is a failed run (`ok: false`, non-zero exit),
+  not "no change".
+- **Workaround:** `--allowedTools "Bash(*/ubc *)" "Bash(ubc *)" "Bash(python3 scripts/*)"` in the runner command (`Bash(*/ubc:*)` does not match an absolute path; `Bash(*/ubc *)` does). Then the cascade changes spec, code and test spec.
+- **Solution A:** detect permission denials / unanswered questions in the runner's stream and fail the stage.
+- **Solution B:** the profile's runner example includes the needed `--allowedTools`; `doctor` checks that the runner may run `ubc`.
+
+### PH-22 `change-request` cascade: misreported code stage, nested decisions not reconciled
+
+- **Origin:** product_demo
+- **Tool:** ubc 0.37.0 (`agent run --skill change-request`)
+- **Marker:** branch `feat/engineering-model` (plan 001 P8, uncommitted) and a scratch clone with the lockout chain committed; runner with the PH-21 workaround.
+- **Summary:**
+  1. Result `specs(modified SPEC_LOCKOUT), code(no change), test_specs(modified TSPEC_LOCKOUT)`, but `src/product_demo/lockout.py` was changed (`LOCK_SECONDS = 900` → `600`): the code stage is judged by its needs (the marker did not change), not by the source.
+  2. `DEC_REQ_LOCKOUT_LIMITS`, nested in the edited `REQ_LOCKOUT`, still says "15 minutes … 480 per day": the cascade runs the stages below the anchor's stage only, not the decisions inside the anchor (and `impact` does not list them, PH-19). Decisions nested in downstream needs were updated (`DEC_TSPEC_LOCKOUT_CLOCK`). Risks with "15 minutes" in their text are not reconciled either.
+  3. The code stage is not reliable: in a repeat of the same cascade (same edit, same config) the runner changed spec and test spec but **not** `lockout.py`, so spec (600 s) and code (900 s) disagreed — and the tests stayed green because they used the code's constant.
+- **Expected:** a code stage reports a changed source file; the cascade (or at least its report) covers the anchor's nested decisions and the cross-cutting needs linked to the changed needs.
+- **Workaround:** the review gate flags the decision (`outdated` through the `decides` trace edges, option F) and the hash conditions flag the risks (`needs.link_condition_failed`); both are re-evaluated by review. Tests use the specified values literally (`tests/test_lockout.py`), so a code stage that missed the change fails the tests.
+- **Solution A:** count changed files under a code stage's route as a modification.
+- **Solution B:** add a pass for the anchor's nested needs and for `decides` / `affects` / `mitigated_by` neighbours.
+
 ## 5. Sphinx-Needs
 
 ### SN-01 Every schema severity is a Sphinx warning
@@ -1408,4 +1443,18 @@ inputs named.
 - **Workaround:** `"const": "testcase"`; negative test (wrong `executes` target) confirms the rule fires in both toolchains.
 - **Solution A:** fix the docs table (directive `test-case`, type `testcase`).
 - **Solution B:** warn when a schema `select` names a type that no need type declares.
+
+### STR-07 JUnit file not a build dependency: stale results in incremental builds
+
+- **Origin:** product_demo
+- **Tool:** Sphinx-Test-Reports 3.0.0 (Sphinx 9.1.0)
+- **Marker:** branch `feat/engineering-model` (plan 001 P8, uncommitted) and a scratch clone with the lockout chain committed: `tests/test_lockout.py` added, `ubc script tests` rewrote `tests/_results/junit.xml`, then `sphinx-build -W -b html . _build` (incremental).
+- **Summary:** the `test-file` page kept the previous results — the two new
+  cases (`TSPEC_LOCKOUT`) were missing, so the schema rule
+  `cov-tspec-result` reported `TSPEC_LOCKOUT` as not executed; `ubc` showed
+  them. A clean build (`sphinx:clean`) showed both.
+- **Expected:** the JUnit file is registered as a dependency of the document (`env.note_dependency`), so a changed file rebuilds the page.
+- **Workaround:** the `sphinx` script builds with `-E` (fresh environment).
+- **Solution A:** `note_dependency` for every `:file:` of `test-file` / `test-results`.
+- **Solution B:** document that test reports need a fresh build.
 

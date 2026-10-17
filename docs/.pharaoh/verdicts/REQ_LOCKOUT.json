@@ -1,0 +1,40 @@
+{
+  "agent": "claude-code",
+  "axes": {
+    "atomicity": {
+      "reason": "One obligation (reject during a window after a number of failures).",
+      "score": 2
+    },
+    "comprehensibility": {
+      "reason": "Clear.",
+      "score": 2
+    },
+    "decisions_documented": {
+      "reason": "DEC_REQ_LOCKOUT_LIMITS records the values and the rejected alternatives.",
+      "score": 2
+    },
+    "feasibility": {
+      "reason": "Feasible, see SPEC_LOCKOUT.",
+      "score": 2
+    },
+    "parent_fit": {
+      "reason": "Implements the protection asked for in US_LOCKOUT.",
+      "score": 2
+    },
+    "unambiguity": {
+      "reason": "Consecutive, per account, 5, 15 minutes — no room for interpretation.",
+      "score": 2
+    },
+    "verifiability": {
+      "reason": "Numbers and condition make it directly testable.",
+      "score": 2
+    }
+  },
+  "criteria": "req",
+  "criteria_fingerprint": "9476ed745aac678fbff56b38696478ed16eed75f93417ac547efe1fc877d2772",
+  "model": "claude-opus-5-5",
+  "need": "REQ_LOCKOUT",
+  "reviewed_fingerprint": "740013e5b3000b9ac9289677e74241de7315133ebe2353b9aa1629be1e2d0065",
+  "schema": 2,
+  "summary": "pilot review (plan 001 P8)"
+}

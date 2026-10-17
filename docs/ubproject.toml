@@ -45,10 +45,12 @@ needs = "ubc build needs -o needs.json"
 documents = "ubc build list-documents --parser"
 report = "ubc report needs_overview.html.j2"
 # Build with Sphinx + Sphinx-Needs (requires https://docs.astral.sh/uv).
+# `-E` (fresh environment): Sphinx-Test-Reports does not track the JUnit
+# file, so an incremental build would keep old test results (plan 999 STR-07).
 # sphinx-needs >= 9.0 for derived fields (`derive`: `fp`, `parent`), >= 8.2
 # for the variant data (`variant_data*`, `parse_variants`);
 # no upper bound so it tracks releases (verified against sphinx-needs 8.5.0).
-sphinx = "uv run --no-project --with 'sphinx,sphinx-needs>=9.0,myst-parser,sphinxcontrib-mermaid,sphinx-codelinks,sphinx-test-reports,sphinx-mounts' sphinx-build -W -b html . _build"
+sphinx = "uv run --no-project --with 'sphinx,sphinx-needs>=9.0,myst-parser,sphinxcontrib-mermaid,sphinx-codelinks,sphinx-test-reports,sphinx-mounts' sphinx-build -E -W -b html . _build"
 rm_build = "rm -rf _build"
 "sphinx:clean" = { chain = ["rm_build", "sphinx"] }
 
@@ -467,6 +469,9 @@ criteria_file = "quality/risk.toml"
 # on stdin. Changes stay uncommitted for review. Override per machine with
 # UBC_AGENT_RUNNER / UBC_AGENT_RUNNER_MODEL / UBC_AGENT_RUNNER_TIMEOUT.
 [agent.runner]
-command = "claude -p --permission-mode acceptEdits --output-format stream-json --verbose"
+# The runner must be allowed to run `ubc` (the prompts name it by absolute
+# path) and the project scripts; without that it asks for approval, nobody
+# answers headless, and `ubc agent run` reports "no change" (plan 999 PH-21).
+command = 'claude -p --permission-mode acceptEdits --allowedTools "Bash(*/ubc *)" "Bash(ubc *)" "Bash(python3 scripts/*)" --output-format stream-json --verbose'
 model = "sonnet"
 timeout_secs = 900
