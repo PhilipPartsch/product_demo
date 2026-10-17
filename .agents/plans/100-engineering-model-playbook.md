@@ -186,6 +186,17 @@ text answers. Record everything in the project plan.
   features (`[workflow]`, codelinks, test reports, schemas, `id_regex`,
   mounts, variants).
 
+### A2. Starting from the starter
+
+The repository of runs 1–3 (`product_demo`) is an **empty starter** after
+plan 003: model, schema, workflow, skills, templates, scripts, CI and docs,
+no content. A new project can start from it (copy, then adapt §1 / §2 —
+types, fields, links — through the "changing a model" steps, §8) instead of
+from the blank profile. Starting content: `ubc agent prompt` briefs the
+first stage on a graph with **zero** needs; keep test-result directives
+inactive until the first test exists (PH-24); `scripts/run_tests.py` lets an
+empty `tests/` pass.
+
 ### B. Reference configs (scratchpad only)
 
 - `ubc agent install --detect --plan -p {DOCS}` (writes nothing): what the
@@ -384,6 +395,7 @@ At the end of each run (phase P9):
 | Run | Plan | Date | Project | Notes |
 |---|---|---|---|---|
 | 1 | [001](001-engineering-model.md) | 2026-10-17 | product_demo `docs/` | first run; P0–P9; pilot "login lockout" autonomous with HTML review; CI 1 + CI 2 green; 20 new tool findings (UB-20…26, PH-14…22, SN-08/09, STR-06/07); decisions / risks setup became pattern §9.1 |
+| 3 | [003](003-remove-test-data.md) | 2026-10-17 | product_demo `docs/` | test data removed → empty starter (§3 A2); finding PH-24 |
 | 2 | [002](002-add-arch-level.md) | 2026-10-17 | product_demo `docs/` | model change: architecture level; autonomous; became §8 "Changing a model later"; finding PH-23 |
 
 ## 8. Changing a model later (proven in run 2, plan 002)

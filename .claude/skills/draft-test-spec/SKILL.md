@@ -41,7 +41,10 @@ reading `.rst` files.
     `.agents/templates/test.py`, with
     `record_property("executes", "<TSPEC_ID>")` — it becomes the `executes`
     link of the test result (schema rules `link-result-tspec`,
-    `cov-tspec-result`).
+    `cov-tspec-result`);
+  - with the **first** test: activate the `test-file` directive in
+    `tests/test_results.rst` (it is kept there as an RST comment while the
+    project has no tests, plan 999 PH-24) — un-comment it, unchanged.
 - **Coverage:** every specification in the briefing is verified by at least
   one test specification (trace gate `verifies`, schema rule
   `cov-spec-test`), including the error cases it implies (review axis

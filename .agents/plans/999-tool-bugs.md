@@ -132,6 +132,7 @@ documentation, convenience.
 | PH-21 | Pharaoh | **high** | product_demo | applies (fixed in `[agent.runner]`, plan 001 P8) | `ubc agent run`: a runner that is not allowed to run `ubc` asks for approval, nobody answers headless, and every stage is reported `no change` with `ok: true` |
 | PH-22 | Pharaoh | medium | product_demo | applies (plan 001 P8 cascade) | `change-request` cascade: the code stage reports `no change` although `src/` was changed; decisions nested in the edited anchor (and risks) are not part of the cascade |
 | PH-23 | Pharaoh | medium | product_demo | applies (plan 002 migration) | `change-request` from a **new** upstream element authors new downstream needs (`SPEC_SESSION`, `TSPEC_SESSION`, with `:status: draft`) instead of re-linking the existing ones to it |
+| PH-24 | Pharaoh | medium | product_demo | applies (plan 003 starter: `test-file` directive kept as a comment until the first test) | a graph whose only needs are test results (`testfile` / `testsuite`) is not "empty": `ubc agent prompt` refuses without an anchor, so the first user story cannot be briefed |
 | SN-01 | Sphinx-Needs | medium | external | applies (plan 001 P3: `info` suppressed via `suppress_warnings`, violations are errors on purpose, CI 2 reads `schema_violations.json`) | every schema severity is a Sphinx warning; `-W` fails on `warning` rules |
 | SN-02 | Sphinx-Needs | medium | external | n/a | `needs_from_toml` overrides `needs_external_needs` from `conf.py` |
 | SN-03 | Sphinx-Needs | low | external | n/a | `needs.json` drops external needs by default (`builder_filter`), unlike ubc |
@@ -1007,6 +1008,27 @@ are `bms_block`s of stage `bms_allocation`. Workaround: `direction =
 - **Solution B:** `change-request` only modifies existing artefacts unless
   the briefing names a genuinely new upstream obligation; it carries the
   stage's `authoring` text (status rule).
+
+### PH-24 Test-result needs block the first stage of an empty project
+
+- **Origin:** product_demo
+- **Tool:** ubc 0.37.0 (`agent prompt`, `agent run`)
+- **Marker:** branch `feat/remove-test-data` (plan 003): all content removed; `tests/test_results.rst` with an active `test-file` directive on an empty JUnit file (pytest, no tests).
+- **Summary:** the only needs are `TF_PYTEST` (`testfile`) and
+  `TF_PYTEST_0EA` (`testsuite`) — types no workflow stage produces.
+  `ubc agent next` recommends `user_stories` / `draft-us`, but
+  `ubc agent prompt` (also with `--stage user_stories`) answers "`ubc agent
+  prompt` needs an anchor need to brief from; pass --id <NEED_ID>". With the
+  directive removed (0 needs) it briefs: "This project's need graph is
+  EMPTY: … this is the FIRST artefact".
+- **Expected:** "empty" means no need of a type a workflow stage produces;
+  needs of other types (test results, external needs) do not block the first
+  stage.
+- **Workaround:** the starter keeps the `test-file` directive as an RST
+  comment; `draft-test-spec` activates it with the first test.
+- **Solution A:** count only workflow-produced types when deciding whether
+  the graph is empty.
+- **Solution B:** let `--stage <first stage>` brief without an anchor.
 
 ## 5. Sphinx-Needs
 

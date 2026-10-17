@@ -39,7 +39,8 @@ check = "ubc check --deny warning"
 html = "ubc build html"
 # Run the pytest suite; writes the JUnit XML the test-result needs are built
 # from, so it has to run before `check`, `html` and `sphinx`.
-tests = "uv run --no-project --with pytest pytest -q -c ../pyproject.toml --rootdir=.. --junitxml=../tests/_results/junit.xml ../tests"
+# `run_tests.py` = pytest, but "no tests collected" (exit 5) is a success.
+tests = "uv run --no-project --with pytest python ../scripts/run_tests.py -q -c ../pyproject.toml --rootdir=.. --junitxml=../tests/_results/junit.xml ../tests"
 # What CI runs: tests first (they feed the docs), then lint, then build the site.
 ci = { chain = ["tests", "check", "html"] }
 needs = "ubc build needs -o needs.json"
