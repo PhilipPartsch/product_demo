@@ -131,6 +131,7 @@ documentation, convenience.
 | PH-20 | Pharaoh | medium | product_demo | applies (plan 001 P7: CI 1 uses `scripts/ci_gates.py` instead) | `release-check` baseline unusable for a two-tier CI: help says "a JSON gap-key list", the tool wants a map of an undocumented key to a count; `--update-baseline` only writes on a passing run; missing reviews and open / proposed statuses count as gaps, no category filter |
 | PH-21 | Pharaoh | **high** | product_demo | applies (fixed in `[agent.runner]`, plan 001 P8) | `ubc agent run`: a runner that is not allowed to run `ubc` asks for approval, nobody answers headless, and every stage is reported `no change` with `ok: true` |
 | PH-22 | Pharaoh | medium | product_demo | applies (plan 001 P8 cascade) | `change-request` cascade: the code stage reports `no change` although `src/` was changed; decisions nested in the edited anchor (and risks) are not part of the cascade |
+| PH-23 | Pharaoh | medium | product_demo | applies (plan 002 migration) | `change-request` from a **new** upstream element authors new downstream needs (`SPEC_SESSION`, `TSPEC_SESSION`, with `:status: draft`) instead of re-linking the existing ones to it |
 | SN-01 | Sphinx-Needs | medium | external | applies (plan 001 P3: `info` suppressed via `suppress_warnings`, violations are errors on purpose, CI 2 reads `schema_violations.json`) | every schema severity is a Sphinx warning; `-W` fails on `warning` rules |
 | SN-02 | Sphinx-Needs | medium | external | n/a | `needs_from_toml` overrides `needs_external_needs` from `conf.py` |
 | SN-03 | Sphinx-Needs | low | external | n/a | `needs.json` drops external needs by default (`builder_filter`), unlike ubc |
@@ -983,6 +984,29 @@ are `bms_block`s of stage `bms_allocation`. Workaround: `direction =
 - **Workaround:** the review gate flags the decision (`outdated` through the `decides` trace edges, option F) and the hash conditions flag the risks (`needs.link_condition_failed`); both are re-evaluated by review. Tests use the specified values literally (`tests/test_lockout.py`), so a code stage that missed the change fails the tests.
 - **Solution A:** count changed files under a code stage's route as a modification.
 - **Solution B:** add a pass for the anchor's nested needs and for `decides` / `affects` / `mitigated_by` neighbours.
+
+### PH-23 `change-request` cannot re-link existing needs to a new parent
+
+- **Origin:** product_demo
+- **Tool:** ubc 0.37.0 (`agent run --skill change-request`), runner Claude Code (sonnet) with the PH-21 permissions
+- **Marker:** branch `feat/arch-level` (plan 002, uncommitted): new type `arch` between `req` and `spec`, stage `specs` traces `refines` up `arch`; `ARCH_AUTH_SERVICE` just authored, `SPEC_HASH` still `:refines: REQ_AUTH`.
+- **Summary:** a model change inserts a level; the existing specifications
+  must be re-linked from the requirement to the new architecture element.
+  `ubc agent run --skill change-request --id ARCH_AUTH_SERVICE` reported
+  `specs(authored SPEC_SESSION), code(no change), test_specs(authored
+  TSPEC_SESSION)`: it designed new needs from the new element's text (which
+  itself contained an invented session design) and left `SPEC_HASH`
+  untouched. Both new needs carry `:status: draft` — the installed skill has
+  no stage `authoring` text that could override PH-15.
+- **Expected:** a reconcile pass for a new parent re-links the existing
+  children whose obligation it now holds (or reports that it cannot), and
+  does not author new design; status follows the project's rules.
+- **Workaround:** re-link by hand (plan 002); the new needs were reverted;
+  `schemas.json` would have rejected `:status: draft` anyway (`status-none`).
+- **Solution A:** a `reparent` / `relink` intent for model changes.
+- **Solution B:** `change-request` only modifies existing artefacts unless
+  the briefing names a genuinely new upstream obligation; it carries the
+  stage's `authoring` text (status rule).
 
 ## 5. Sphinx-Needs
 

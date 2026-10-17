@@ -38,8 +38,9 @@ reading `.rst` files.
   `.agents/templates/req.rst`; link `:satisfies:` to the user story (only
   `us` ids — schema rule `link-req-us`); fields `safety_relevant`,
   `security_relevant` (required).
-- **Downstream:** `specs` stage (`spec` `refines` → `req`): state WHAT, leave
-  HOW to the specification.
+- **Downstream:** `archs` stage (`arch` `fulfills` → `req`), then `specs`
+  (`spec` `refines` → `arch`): state WHAT, leave the allocation to the
+  architecture and HOW to the specification.
 - **Coverage:** the user story is satisfied by at least one requirement
   (trace gate `satisfies`, schema rule `cov-us`); decompose it completely —
   happy path, error and edge cases, relevant non-functional constraints.
@@ -117,7 +118,8 @@ link to it), then call `record-dec` / `record-risk` once per payload.
   know>]` in the body and stop; also record an `ai-workflow` risk for it.
 - One obligation per directive; no compound "and / or".
 - Write `shall`, not `should` or `must`.
-- No design detail in the body; that belongs to the specification.
+- No design detail in the body; that belongs to the architecture and the
+  specification.
 - The `:id:` uses the `REQ_` prefix and matches `^[A-Z]+_[A-Z][A-Z0-9_]*$`.
 
 ## Confirm

@@ -245,9 +245,10 @@ PH-18). So:
      `.claude/commands/ubc-agent-next.md`, `workflow-author`): take the new
      content as is (copy all three locations) and update their manifest
      baselines (`sha256` of the new content);
-   - **replaced skills** (`draft-requirement`, `draft-impl`) and the **own
+   - **replaced skills** (`draft-requirement`, `draft-impl`), the **own
      copies of generic skills** (`review-spec`, `review-test-spec`,
-     `review-risk` ← `review-requirement`): read the preset diff and port
+     `review-risk`, `review-arch` ← `review-requirement`) and the own
+     `draft-architecture` (← the profile's `draft-arch`): read the preset diff and port
      what is relevant into `.agents/skills/<name>/SKILL.md` by hand, then
      `python3 scripts/mirror_skills.py`;
    - **removed skills**: ignore, unless the user wants a new one back;
@@ -346,6 +347,7 @@ what to remove from this repository when the entry is fixed.
 | PH-20 | T1 | `release-check --baseline` with `[]` / gap list | `scripts/ci_gates.py gaps` |
 | PH-21 | T1 / T3 | runner without `--allowedTools`, `ubc agent run --skill change-request` | `--allowedTools` stay (they are correct anyway) |
 | PH-22 | T1 / T3 | cascade after editing `REQ_LOCKOUT`: code stage report, nested decision | — (tests with literal values stay) |
+| PH-23 | T1 / T3 | scratch: insert a level, `ubc agent run --skill change-request --id <new parent>` | — (re-link by hand) |
 | SN-08 | T2 | `req` linking a `spec` via `satisfies` → console names the target | CI reads `schema_violations.json` anyway |
 | SN-09 | T2 | `needflow` without `flow_engine` and without PlantUML | `flow_engine = "graphviz"` may stay |
 | STR-06 | T2 | docs table of need types | — |

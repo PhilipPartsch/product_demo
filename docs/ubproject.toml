@@ -77,6 +77,13 @@ directive = "req"
 title = "Requirement"
 prefix = "REQ_"
 
+# One component or interface: responsibility, interfaces, trust / safety
+# boundary (plan 002).
+[[needs.types]]
+directive = "arch"
+title = "Architecture Element"
+prefix = "ARCH_"
+
 [[needs.types]]
 directive = "spec"
 title = "Specification"
@@ -121,6 +128,12 @@ variant_data_file = "variants.json"
 outgoing = "satisfies"
 incoming = "satisfied by"
 
+# arch -> req (plan 002). `satisfies` is taken by req -> us.
+[needs.links.fulfills]
+outgoing = "fulfills"
+incoming = "fulfilled by"
+
+# spec -> arch (since plan 002; was spec -> req).
 [needs.links.refines]
 outgoing = "refines"
 incoming = "refined by"
@@ -172,6 +185,10 @@ schema.type = "boolean"
 
 [needs.fields.security_relevant]
 description = "The need is relevant for security"
+schema.type = "boolean"
+
+[needs.fields.trust_boundary]
+description = "The architecture element sits on a trust boundary (input from outside, privilege change)"
 schema.type = "boolean"
 
 [needs.fields.test_level]
@@ -322,18 +339,35 @@ direction = "both"
 min = 1
 
 [[workflow.stages]]
+id = "archs"
+produces = "arch"
+depends_on = ["reqs"]
+author_skill = "draft-architecture"
+review_skill = "review-arch"
+authoring = "Allocate the requirement to architecture elements: one element per distinct responsibility (component or interface), each fulfilling the requirement(s) it is responsible for, with its interfaces and trust_boundary, and update the component diagram on the page. Record every risk you see with the record-risk skill and every real choice with record-dec (optional for architecture elements). Write no `:status:` field: only decisions and risks have a status (schemas.json rule status-none) — this overrides the generic `:status:` line of the instruction."
+[workflow.stages.route]
+scope = "stream"
+granularity = "single"
+path = "architecture.rst"
+[[workflow.stages.trace]]
+up = "req"
+link = "fulfills"
+direction = "both"
+min = 1
+
+[[workflow.stages]]
 id = "specs"
 produces = "spec"
-depends_on = ["reqs"]
+depends_on = ["archs"]
 author_skill = "draft-spec"
 review_skill = "review-spec"
-authoring = "Specify how each requirement is met: one specification per distinct design element, each refining the requirement(s) it realises, specific enough to implement and to test. Record every choice between alternatives with the record-dec skill and every risk you see with the record-risk skill (hand over the full payload). Write no `:status:` field: only decisions and risks have a status (schemas.json rule status-none) — this overrides the generic `:status:` line of the instruction."
+authoring = "Specify how each architecture element is realised: one specification per distinct design element, each refining the architecture element(s) it details, specific enough to implement and to test. Record every choice between alternatives with the record-dec skill and every risk you see with the record-risk skill (hand over the full payload). Write no `:status:` field: only decisions and risks have a status (schemas.json rule status-none) — this overrides the generic `:status:` line of the instruction."
 [workflow.stages.route]
 scope = "stream"
 granularity = "single"
 path = "specifications.rst"
 [[workflow.stages.trace]]
-up = "req"
+up = "arch"
 link = "refines"
 direction = "both"
 min = 1
@@ -421,6 +455,11 @@ up = "test_spec"
 link = "decides"
 direction = "outgoing"
 min = 1
+[[workflow.stages.trace]]
+up = "arch"
+link = "decides"
+direction = "outgoing"
+min = 1
 
 [[workflow.stages]]
 id = "risks"
@@ -449,6 +488,9 @@ no_overlap = 2
 
 [quality.type_configs.req]
 criteria_file = "quality/req.toml"
+
+[quality.type_configs.arch]
+criteria_file = "quality/architecture.toml"
 
 [quality.type_configs.spec]
 criteria_file = "quality/spec.toml"

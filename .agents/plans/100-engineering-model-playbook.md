@@ -130,7 +130,9 @@ templates, …).
 
 **g. Expected results** — config, documentation, CI, anything else.
 
-**h. Process constraints** — bootstrap tool, how the user wants to evaluate
+**h. Process constraints** — is the existing / pilot content **real or test
+data** (decides how much migration and review care later changes need; run 2:
+test data, removed later); bootstrap tool, how the user wants to evaluate
 the configuration, CI docs to follow, repeatability.
 
 ### 2.2 Decision questions
@@ -147,7 +149,7 @@ text answers. Record everything in the project plan.
 | Q-TYPES | Gaps in the type list (e.g. architecture level missing?) | always | from the brief | 001: none |
 | Q-DUP | How to prevent overlapping needs of a type | brief has a uniqueness rule | review axis; axis + check skill; check skill | 001: review axis |
 | Q-INT | Integrity attributes | brief names safety / security | domain standard levels (e.g. ASIL, SIL, DAL, CAL, IEC 62304 class); generic bools + level; none | 001: generic |
-| Q-XCUT | Placement of each cross-cutting type (suggestion for decisions / risks: §8.1) | brief has cross-cutting types | nested in parent + link; file per stream; central log — tell the user first: workflow stages cover a whole upstream type and author into files (PH-16), so nested / per-need elements are created by stage skills, not stages | 001: decisions nested, risks global; both via stage skills + recording skills |
+| Q-XCUT | Placement of each cross-cutting type (suggestion for decisions / risks: §9.1) | brief has cross-cutting types | nested in parent + link; file per stream; central log — tell the user first: workflow stages cover a whole upstream type and author into files (PH-16), so nested / per-need elements are created by stage skills, not stages | 001: decisions nested, risks global; both via stage skills + recording skills |
 | Q-LANG | Code / test language, framework | brief has code-marker or test-result types, `{CODE}` unclear | from the repository | 001: Python + pytest |
 | Q-MOUNT | sphinx-mounts usage — tell the user first: mounts carry **documents** (`.rst` / `.md`), not code; code is read by Codelinks directly | Sphinx in `{TOOLCHAINS}` and sources outside `{DOCS}` | docs next to the code (`src-trace` / `test-file` pages in `src/`, `tests/`); mount templates; none | 001: src + tests |
 | Q-LINKS | Rename existing links / migrate needs? | `{EXISTING}` conflicts with the model | rename + migrate; keep | 001: rename |
@@ -156,9 +158,9 @@ text answers. Record everything in the project plan.
 | Q-COV | Coverage rules: where | Q-SCHEMA = yes | schema + workflow traces; workflow only; schema only | 001: both |
 | Q-PROP | Propagate attributes along links | integrity attributes exist | child must match parent; parent from child; both; none | 001: none |
 | Q-XREQ | Which types must carry a cross-cutting need (e.g. a decision) | brief has a "every … has …" rule | per type | 001: decisions on us, req, spec, test_spec |
-| Q-LIFE | **Which types** have a lifecycle (`status`), and which values / final values per type (suggestion: §8.1) | always — ask per type, not one answer for all | only cross-cutting types; all authored types; all types; draft→review→approved; own values per type on the one `status` field | 001: only `dec` / `risk` (first misapplied to all types, L20) |
+| Q-LIFE | **Which types** have a lifecycle (`status`), and which values / final values per type (suggestion: §9.1) | always — ask per type, not one answer for all | only cross-cutting types; all authored types; all types; draft→review→approved; own values per type on the one `status` field | 001: only `dec` / `risk` (first misapplied to all types, L20) |
 | Q-EVAL | How the user evaluates the configuration | always | model docs page; gate per phase; validator output; pilot chain with per-artefact approvals; **autonomous pilot + HTML review** (agent authors and reviews, user reviews the rendered result); extra questions in pilot | 001: docs page, gates; the pilot ran autonomously with an HTML review (user's choice at P8) |
-| Q-JOBS | How cross-cutting needs are kept current (unresolved / stale) (suggestion: §8.1) | brief asks for evaluation | unresolved: schema `info` rules + report pages; stale: review gate with `outgoing` trace edges on the stage (works for nested needs), hash-conditioned links `TARGET[fp=="…"]` with a derived `fingerprint` field (not for nested needs — the hash invalidates itself), own ledger script; judgment: review skills | 001: decisions → trace edges, risks → hash conditions, reports, no script |
+| Q-JOBS | How cross-cutting needs are kept current (unresolved / stale) (suggestion: §9.1) | brief asks for evaluation | unresolved: schema `info` rules + report pages; stale: review gate with `outgoing` trace edges on the stage (works for nested needs), hash-conditioned links `TARGET[fp=="…"]` with a derived `fingerprint` field (not for nested needs — the hash invalidates itself), own ledger script; judgment: review skills | 001: decisions → trace edges, risks → hash conditions, reports, no script |
 | Q-CI | CI tiers | always | one pipeline; integration + release tiers; more | 001: two tiers |
 | Q-REL | What marks a release | release tier exists | release branch PR (name pattern?); tag (pattern?); both | 001: both (`release/*`, `v*`) |
 | Q-CI1 | What the integration tier blocks on | per tier | build / lint; new gaps (ratchet); failing verdicts; tests; open status | 001: all but open status |
@@ -287,6 +289,10 @@ From tool facts (re-check on new versions):
 - **Type names from `needs.json`,** not from tool docs (Sphinx-Test-Reports
   creates `testcase`, its docs say `test-case`, STR-06); a `select` on a
   wrong name silently validates nothing.
+- **Ground new elements in what exists.** Stage skills (especially
+  architecture) must take responsibilities and interfaces from the
+  requirements and the existing code, not invent features; a gap is a risk,
+  not new design (run 2: an invented session design cascaded into specs).
 - **Codelinks one-line fields are positional:** a required field after one
   with a default is refused; make all marker fields required (explicit
   links and safety / security values).
@@ -370,23 +376,46 @@ At the end of each run (phase P9):
 
 1. Move every learning-log entry of the project plan into §1 (parameter),
    §2 (brief field or question), §3 (step), §4 (rule), §5 (CI) or §6
-   (pitfall); a setup the user liked as a whole goes to §8 (suggested
+   (pitfall); a setup the user liked as a whole goes to §9 (suggested
    patterns). Run-specific answers go only into "seen in runs" columns.
 2. Re-check §4 / §6 against the tool versions of the run.
 3. Add the run below.
 
 | Run | Plan | Date | Project | Notes |
 |---|---|---|---|---|
-| 1 | [001](001-engineering-model.md) | 2026-10-17 | product_demo `docs/` | first run; P0–P9; pilot "login lockout" autonomous with HTML review; CI 1 + CI 2 green; 20 new tool findings (UB-20…26, PH-14…22, SN-08/09, STR-06/07); decisions / risks setup became pattern §8.1 |
-| 2 | [002](002-add-arch-level.md) | planned | product_demo `docs/` | model change: architecture level (tests "changing a model later") |
+| 1 | [001](001-engineering-model.md) | 2026-10-17 | product_demo `docs/` | first run; P0–P9; pilot "login lockout" autonomous with HTML review; CI 1 + CI 2 green; 20 new tool findings (UB-20…26, PH-14…22, SN-08/09, STR-06/07); decisions / risks setup became pattern §9.1 |
+| 2 | [002](002-add-arch-level.md) | 2026-10-17 | product_demo `docs/` | model change: architecture level; autonomous; became §8 "Changing a model later"; finding PH-23 |
 
-## 8. Suggested patterns
+## 8. Changing a model later (proven in run 2, plan 002)
+
+Inserting a level (or any type / link change) into a model that already has
+content, reviews and CI:
+
+1. **Re-check the plan against the current state** before asking anything
+   (needs, verdicts, risks with hash conditions, CI tiers, every page /
+   skill / template that names the changed edge).
+2. **Order of changes:** links → schema (rules + type lists) → workflow
+   (new stage, changed `depends_on` / traces, `decisions` edges) → quality
+   pack → template → skills (new stage skill, parent / downstream text of
+   the neighbours) → docs pages → migration → re-review → sign-off of risks.
+3. **Migration:** new elements can be authored through the workflow
+   (`ubc agent run --id <parent>`), but **re-linking existing needs to a new
+   parent is manual** — `change-request` designs new needs instead (PH-23).
+   Check every runner output against the skill (missing steps, invented
+   scope).
+4. **Expect re-reviews** where content or parents change, and stale risks
+   where their targets change; `scripts/refresh_risk_links.py` after the
+   re-evaluation.
+5. **Land the change in one merge:** CI 1 ratchets structural gaps, so a
+   half-migrated model must not reach `main`.
+
+## 9. Suggested patterns
 
 Proven setups to **propose** in §2 (the user decides; adapt names and
 values to the brief). Each lists what to build, the reference files of the
 run that proved it, and its limits.
 
-### 8.1 Decisions and risks (proven in run 001)
+### 9.1 Decisions and risks (proven in run 001)
 
 Use when the brief asks for documented decisions and risks that stay
 current while the model changes (§2.2 Q-XCUT, Q-LIFE, Q-JOBS).

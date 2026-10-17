@@ -8,6 +8,7 @@ Product Demo
 
    user_stories
    requirements
+   architecture
    specifications
    verification
    risks

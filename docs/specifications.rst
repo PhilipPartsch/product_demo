@@ -5,7 +5,7 @@ Specifications
 
 .. spec:: Password hashing
    :id: SPEC_HASH
-   :refines: REQ_AUTH
+   :refines: ARCH_AUTH_SERVICE
    :safety_relevant: false
    :security_relevant: true
 
@@ -42,7 +42,7 @@ Specifications
 
 .. spec:: Structured audit records
    :id: SPEC_AUDIT
-   :refines: REQ_LOG
+   :refines: ARCH_AUDIT_LOGGER
    :safety_relevant: false
    :security_relevant: true
 
@@ -79,7 +79,7 @@ Specifications
 
 .. spec:: Failed-login counter with lockout window
    :id: SPEC_LOCKOUT
-   :refines: REQ_LOCKOUT
+   :refines: ARCH_LOCKOUT_GUARD
    :safety_relevant: false
    :security_relevant: true
 
@@ -120,4 +120,3 @@ Specifications
 
       In-memory state is chosen because it matches the in-memory audit log
       and keeps the guard simple and testable.
-

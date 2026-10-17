@@ -1,6 +1,6 @@
 .. spec:: {{title: a few words naming the design element}}
    :id: SPEC_{{NAME}}
-   :refines: {{REQ_ID}}[, {{REQ_ID}}]
+   :refines: {{ARCH_ID}}[, {{ARCH_ID}}]
    :safety_relevant: {{true|false}}
    :security_relevant: {{true|false}}
 
