@@ -1,5 +1,0 @@
-.. _full-impls:
-
-Implementations
-===============
-

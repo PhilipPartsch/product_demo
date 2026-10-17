@@ -1,0 +1,28 @@
+{
+  "agent": "claude-code",
+  "axes": {
+    "alternatives_listed": {
+      "reason": "The chosen option and at least one rejected alternative with the reason.",
+      "score": 2
+    },
+    "consequences_present": {
+      "reason": "Consequences name what is enabled and the accepted trade-off.",
+      "score": 2
+    },
+    "context_present": {
+      "reason": "Context states the problem behind the choice (fake clock vs. sleeping and shorter duration).",
+      "score": 2
+    },
+    "rationale_quality": {
+      "reason": "One-sentence rationale ties the choice to the context.",
+      "score": 2
+    }
+  },
+  "criteria": "dec",
+  "criteria_fingerprint": "acde53ac62d0cfe944e6386d68e527c7fa5d3bb77a28dbc43b53d9f34a092293",
+  "model": "claude-opus-5-5",
+  "need": "DEC_TSPEC_LOCKOUT_CLOCK",
+  "reviewed_fingerprint": "13d4d4dbd9e28ca033fba9d1d4a9dee27825c2f0855ef3f4928b115803aa99f5",
+  "schema": 2,
+  "summary": "pilot review (plan 001 P8)"
+}

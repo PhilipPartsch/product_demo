@@ -1,0 +1,72 @@
+# CI 2: release branches and version tags (plan 001 §1.2, docs/engineering_model/ci.rst).
+# Nothing may be open: no gap, no schema finding of any severity, no stale
+# risk, every review verdict present, fresh and passing.
+name: ci-release
+
+on:
+  pull_request:
+    branches: ["release/**"]
+  push:
+    branches: ["release/**"]
+    tags: ["v*"]
+  workflow_dispatch:
+
+env:
+  # Keep in sync with the ubCode version used locally (plan 998).
+  UBC_VERSION: "0.37.0"
+  CI_TIER: release
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/setup
+        with:
+          ubc-version: ${{ env.UBC_VERSION }}
+
+      - name: Run the tests
+        working-directory: docs
+        run: ubc script tests
+
+      # `info` = completeness (coverage, decisions present, open risks,
+      # proposed decisions, failed test results): none allowed for a release.
+      - name: Lint (no finding at all)
+        working-directory: docs
+        run: ubc check --deny info
+
+      - name: Build the HTML site with ubc
+        working-directory: docs
+        run: ubc script html
+
+      - name: Build with Sphinx (-W)
+        working-directory: docs
+        run: ubc script sphinx
+
+      # Sphinx suppresses schema `info` on the console; the file has them all.
+      - name: No schema finding in the Sphinx build
+        run: python3 scripts/ci_gates.py schema-json docs/_build/schema_violations.json
+
+      - name: Check the workflow config
+        working-directory: docs
+        run: |
+          ubc agent config-validate
+          ubc agent doctor
+
+      - name: No gaps
+        run: python3 scripts/ci_gates.py gaps --tier release
+
+      - name: Every review verdict present, fresh and passing
+        run: python3 scripts/ci_gates.py verdicts --tier release
+
+      - name: Skill copies in sync
+        run: python3 scripts/mirror_skills.py --check
+
+      - name: Upload the sites
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: site
+          path: docs/_build
+          if-no-files-found: ignore

@@ -1,0 +1,81 @@
+# Own criteria pack for `test_spec` (plan 001 §5.4), based on the installed
+# `requirement.toml` (vmodel profile, left untouched so `ubc agent update` stays
+# conflict-free). Keeps guidance + `parent_fit`; test-specific axes; adds `decisions_documented`.
+#
+# Every axis is judgment-only and scored 0..2 (2 = fully meets, 1 = partial,
+# 0 = the fail condition).
+
+guidance = """
+- Fail closed: when genuinely uncertain whether an axis is met, score it 0 \
+rather than giving the benefit of the doubt, and explain the uncertainty in \
+your reasoning.
+- Be lenient with domain-specific terminology and abbreviations — assume \
+they are defined elsewhere in the project (e.g. a glossary) rather than \
+penalizing a requirement for using them without a local definition.
+- A short, clear requirement is not inherently deficient — judge substance, \
+not length; a crisp requirement can score full marks on every axis.
+- If the requirement's body is empty or unreadable, score every axis 0 and \
+say so — there is nothing else to judge."""
+
+[[criterion]]
+id = "parent_fit"
+name = "Parent Fit"
+description = """
+Whether the requirement substantively addresses the obligation of the \
+parent need it traces to, not merely links to it. The structural trace gate \
+already confirms the link exists; this axis judges whether the \
+requirement's CONTENT actually engages with what the parent asks for."""
+scoring_guide = """
+0: The requirement's content does not address the parent's obligation at all, or addresses a materially different concern — the link is present but the substance is not.
+1: The requirement addresses only part of the parent's obligation, or engages with it tangentially.
+2: The requirement substantively and clearly addresses (a distinct part of) the parent's obligation."""
+max_score = 2
+
+
+[[criterion]]
+id = "pass_criteria"
+name = "Pass Criteria"
+description = """
+Whether the test specification states observable pass / fail criteria."""
+scoring_guide = """
+0: No pass / fail criterion is stated, or it cannot be observed.
+1: Criteria are stated but partly vague (e.g. \"works correctly\").
+2: Every check has a clear, observable pass / fail criterion."""
+max_score = 2
+
+[[criterion]]
+id = "spec_coverage"
+name = "Spec Coverage"
+description = """
+Whether the test specification checks every obligation of the specification \
+it verifies, including the error cases the specification implies."""
+scoring_guide = """
+0: The main obligation of the verified specification is not checked.
+1: The main obligation is checked, but a stated or clearly implied case is missing.
+2: Every obligation of the verified specification, including implied error cases, is checked."""
+max_score = 2
+
+[[criterion]]
+id = "reproducibility"
+name = "Reproducibility"
+description = """
+Whether someone else could run the test from the description alone \
+(preconditions, inputs, steps)."""
+scoring_guide = """
+0: Preconditions or inputs are missing, so the test cannot be reproduced.
+1: The test can be reproduced, but one precondition or input must be guessed.
+2: Preconditions, inputs and steps are all stated."""
+max_score = 2
+
+[[criterion]]
+id = "decisions_documented"
+name = "Decisions Documented"
+description = """
+Whether the choices this need makes (alternatives that were weighed) are \
+recorded as nested `dec` needs that decide it, so a reader can see why it \
+looks the way it does."""
+scoring_guide = """
+0: The need makes a non-obvious choice (one of several plausible options) and no nested decision records it.
+1: A nested decision exists but misses a relevant choice of the need, or does not say which alternative was rejected.
+2: Every relevant choice of the need is recorded by a nested decision."""
+max_score = 2

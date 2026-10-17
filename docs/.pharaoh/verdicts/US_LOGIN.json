@@ -1,0 +1,40 @@
+{
+  "agent": "claude-code",
+  "axes": {
+    "decisions_documented": {
+      "reason": "DEC_US_LOGIN_SCOPE records the password-only scope and the rejected single sign-on.",
+      "score": 2
+    },
+    "naming_clarity": {
+      "reason": "Plain stakeholder words.",
+      "score": 2
+    },
+    "no_mechanism_leak": {
+      "reason": "No implementation construct named.",
+      "score": 2
+    },
+    "no_overlap": {
+      "reason": "US_AUDIT covers investigation, US_LOCKOUT guessing protection; no other story covers logging in.",
+      "score": 2
+    },
+    "parent_fit": {
+      "reason": "Root user story; no parent to trace to.",
+      "score": 2
+    },
+    "single_user_capability": {
+      "reason": "One capability: logging in with a password.",
+      "score": 2
+    },
+    "user_observable": {
+      "reason": "The user sees the login succeed or fail.",
+      "score": 2
+    }
+  },
+  "criteria": "us",
+  "criteria_fingerprint": "c0e38f198a036fbf711010b60cc84717f37d552a13469d147b1bc508237e087e",
+  "model": "claude-opus-5-5",
+  "need": "US_LOGIN",
+  "reviewed_fingerprint": "9c5cfe68ce46231c752e59be17827bc635621baa38bc1b7366a391b96b7cd847",
+  "schema": 2,
+  "summary": "pilot review (plan 001 P8)"
+}

@@ -1,20 +1,22 @@
 ---
 name: draft-requirement
-description: Draft requirements from a parent, each a single shall-clause traced to its parent.
+description: Draft requirements from a user story, each a single shall-clause that satisfies it, and hand their decisions and risks to record-dec / record-risk.
 ---
+
+<!-- Project skill (plan 001 P4 follow-up): replaces the installed vmodel
+     `draft-requirement` with this project's pattern; removed from the install
+     manifest, so `ubc agent update` must only run in a shadow clone
+     (plan 998 T3). -->
 
 # Draft a requirement
 
-The produced need is a single requirement: ONE obligation stated as a single
-shall-clause, grounded in observable behaviour, traced up to the parent it
-decomposes.
+The produced need is one requirement (`req`): ONE obligation stated as a
+single shall-clause, grounded in observable behaviour, satisfying the user
+story it decomposes.
 
 Pass `-p <project path>` on every `ubc agent` command. `<project path>` is the
-directory that holds the target `ubproject.toml` (the project the need you are
-authoring belongs to). A repository can contain several `ubproject.toml`
-files, so without `-p` the command runs against the current directory and can
-target the wrong project. Resolve `<project path>` once from the briefing you
-were handed and reuse it on every call.
+directory that holds the target `ubproject.toml` (here `docs/`). Resolve it once
+from the briefing you were handed and reuse it on every call.
 
 When these instructions say `ubc`, run the exact version-matched `ubc` the
 harness named in the task, not a bare `ubc` from your PATH, and never one
@@ -22,66 +24,104 @@ you install yourself. With no path given, use the `ubc` on your PATH.
 
 ## Use the briefing and the tools — do NOT spelunk the filesystem
 
-The briefing in your prompt ALREADY contains the anchor need, the upstream needs
-you must cover, and the resolved route. Do NOT re-discover the project: no `find`,
-`grep`, `cat`, or reading `.rst` files to rebuild context. When you genuinely need
-one specific need's full detail, run `ubc agent audit --id <ID> -p <project path>`;
-for a need's context briefing run `ubc agent context --id <ID> --no-code -p <project path>`.
-These give structured, reliable data:
-prefer them over reading files. Author once at the reported route; do NOT run `ubc
-build` repeatedly to poke at state — the engine rebuilds and reports after you
-finish.
+The briefing in your prompt already contains the anchor need, the upstream
+needs and the resolved route. For one need's full detail run
+`ubc agent audit --id <ID> -p <project path>`; for its linked needs run
+`ubc agent context --id <ID> --no-code -p <project path>`. Prefer these over
+reading `.rst` files.
 
-Author at the route and with the id prefix the engine reports for this stage, and
-follow the project authoring directive given in the instruction (it says how many
-to produce and what shape they take for this project).
+## Incoming and outgoing needs
+
+- **Incoming:** the user story in your briefing (`us`, the anchor). Read it
+  with `ubc agent audit --id <US_ID>`.
+- **Outgoing:** `req` needs in `docs/requirements.rst`, template
+  `.agents/templates/req.rst`; link `:satisfies:` to the user story (only
+  `us` ids — schema rule `link-req-us`); fields `safety_relevant`,
+  `security_relevant` (required).
+- **Downstream:** `specs` stage (`spec` `refines` → `req`): state WHAT, leave
+  HOW to the specification.
+- **Coverage:** the user story is satisfied by at least one requirement
+  (trace gate `satisfies`, schema rule `cov-us`); decompose it completely —
+  happy path, error and edge cases, relevant non-functional constraints.
 
 ## Propose before you author
 
-Do NOT write any RST yet. First present a short, scannable outline of what you
-plan to author and ask the user to approve or adjust it. The outline lists:
+Do NOT write anything yet. First present a short, scannable outline and ask
+the user to approve or adjust it:
 
-- the id (with the reported prefix), the short title and the shall-clause of
-  each requirement you will create,
-- the trace link named in your briefing that each requirement draws up to its
-  parent, and which parent it points at,
-- the key content decisions, above all how you split any compound obligation
-  into separate requirements and what you deliberately leave to a later stage.
+- per requirement: id (`REQ_` prefix), title, the shall-clause, the user
+  story it satisfies, `safety_relevant` / `security_relevant`,
+- how you split compound obligations and what you leave to a later stage,
+- the decisions (title, chosen option, rejected alternatives) and risks
+  (title, category, severity, likelihood) you will hand over.
 
-Keep it a scannable list, not the full RST. Wait for the user to approve or
-adjust, and do not author until they confirm. On approval, author exactly what
-you agreed, then leave the independent review to the separate review step.
+Wait for the user to confirm; then author exactly what was agreed, call the
+recording skills, and leave the independent review to the review step.
 
-## Output shape (one directive per requirement)
+## Output shape
 
-```rst
-.. <type>:: <short title naming what the requirement is about>
-   :id: <ID with the reported prefix>
-   :status: <the status you were told to open this need in>
-   :<trace-link>: <PARENT_ID>
+Copy `.agents/templates/req.rst` and replace every `{{…}}` placeholder.
+The title is a few words saying what the requirement is about (not a
+sentence, not a repeat of the body); the shall-clause is the body, written
+once.
 
-   <Requirement body>. The body states exactly one obligation in a single
-   shall-clause, grounded in observable behaviour, with no compound "and/or".
-```
+## Status
 
-The title is a heading of a few words saying what the requirement is about,
-such as "ADC sample acceptance range", so a reader can tell the needs apart
-in a list. It is not a sentence and does not repeat the body: the shall-clause
-is the body, written once.
+Only decisions (`dec`) and risks (`risk`) carry `:status:`. A requirement has none: write no `:status:` line. The
+generic instruction line "`:status: draft`" (or any other status the engine
+names) does NOT apply to this type — `schemas.json` rule `status-none` rejects
+it (plan 999 PH-15).
 
-`<type>` is the type named in your briefing for this stage; `<trace-link>` is
-the trace link field named in your briefing.
+## Edit, never rewrite
+
+The route file already exists. Append the new directive at the end of it (or
+edit the one directive you are changing). Never rewrite or reorder the rest
+of the file, even when the instruction says "CREATE THE FILE" (plan 999
+PH-17).
+
+## Decisions and risks of this stage
+
+Every requirement documents its decisions, and every risk you notice is
+recorded. You do not write these needs yourself: you fill a complete payload
+and hand it to the simple recording skill, which only renders it.
+
+**Record a decision** (`record-dec`) whenever the requirement depends on a
+choice between plausible options, for example how a compound wish is split, which quality level (a limit, a rate, a time) is required, or what is deliberately out of scope. Each
+requirement needs at least one decision (`schemas.json` rule
+`dec-present`); if no real alternative existed, record the scoping decision
+(what is in, what is deliberately left out, and why).
+
+**Record a risk** (`record-risk`) for anything that can make the
+requirement or the product fail its purpose, for example an obligation that cannot be verified, a conflict with another requirement, a safety- or security-relevant obligation that is missing, or a user story that is too vague to decompose.
+Use `risk_category = "ai-workflow"` for risks of the authoring itself (an
+assumption you could not verify, missing information, a guess you had to
+make).
+
+**Hand-over.** The payloads are defined by
+`.agents/templates/handover/decision.json` and
+`.agents/templates/handover/risk.json`. Fill EVERY required field from your
+own work — the recording skills add nothing, research nothing and decide
+nothing. A new decision has `status = "proposed"`, a new risk
+`status = "open"`. `target_need` / `decides` / `affects` name the
+requirement you just authored (its id), plus further needs if they are
+affected too. Hand the payload over as one JSON object when you invoke the
+recording skill.
+
+**Order.** Author the requirement first (the recording skills nest into or
+link to it), then call `record-dec` / `record-risk` once per payload.
 
 ## Rules
 
 - **If you cannot decide or lack the context to author this faithfully, do NOT
   guess or fabricate.** Write `[NEEDS CLARIFICATION: <exactly what you need to
-  know>]` in the body and stop. A human resolves it before the gate goes green —
-  the gate fails closed on any need whose body still carries the marker.
-- One obligation per directive. Split compound obligations into separate
-  requirements.
-- The `:id:` carries the reported prefix and matches the project's `id_regex`.
-- Always set the trace link named in your briefing up to the parent so the
-  stage's trace gate is satisfied for every requirement.
-- Write `shall`, not `should` or `must`, for the normative clause.
-- Keep the body free of design detail; that belongs in a later stage.
+  know>]` in the body and stop; also record an `ai-workflow` risk for it.
+- One obligation per directive; no compound "and / or".
+- Write `shall`, not `should` or `must`.
+- No design detail in the body; that belongs to the specification.
+- The `:id:` uses the `REQ_` prefix and matches `^[A-Z]+_[A-Z][A-Z0-9_]*$`.
+
+## Confirm
+
+Run `ubc check <project path>`: it must report no warning or error (`info`
+findings for still missing coverage are allowed on `main`). Leave all changes
+uncommitted for human review.

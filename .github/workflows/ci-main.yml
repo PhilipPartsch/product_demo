@@ -1,0 +1,72 @@
+# CI 1: pull requests to and pushes on main (plan 001 §1.2, docs/engineering_model/ci.rst).
+# Open topics are allowed (missing reviews, open risks, proposed decisions,
+# schema `info` findings, stale risks); broken structure is not.
+name: ci-main
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  # Keep in sync with the ubCode version used locally (plan 998).
+  UBC_VERSION: "0.37.0"
+  # Sphinx (docs/conf.py) and ubc report stale risks without failing on main.
+  CI_TIER: main
+  UBCODE_CONFIG_OVERRIDE: 'lint.ignore = ["config.derive_sphinx_minimum", "needs.link_condition_failed"]'
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/setup
+        with:
+          ubc-version: ${{ env.UBC_VERSION }}
+
+      # The test results are needs: run the tests before any docs build.
+      - name: Run the tests
+        working-directory: docs
+        run: ubc script tests
+
+      - name: Lint (no warning or error)
+        working-directory: docs
+        run: ubc script check
+
+      - name: Build the HTML site with ubc
+        working-directory: docs
+        run: ubc script html
+
+      - name: Build with Sphinx (-W)
+        working-directory: docs
+        run: ubc script sphinx
+
+      - name: Check the workflow config
+        working-directory: docs
+        run: |
+          ubc agent config-validate
+          ubc agent doctor
+
+      - name: No new structural gaps
+        run: python3 scripts/ci_gates.py gaps --tier main
+
+      - name: No failing review verdicts
+        run: python3 scripts/ci_gates.py verdicts --tier main
+
+      - name: Report stale risks
+        run: env -u UBCODE_CONFIG_OVERRIDE python3 scripts/ci_gates.py stale-risks
+
+      - name: Skill copies in sync
+        run: python3 scripts/mirror_skills.py --check
+
+      # Written before the gates decide the result, so upload it even then.
+      - name: Upload the sites
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: site
+          path: docs/_build
+          if-no-files-found: ignore

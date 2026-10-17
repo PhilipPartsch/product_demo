@@ -1,0 +1,40 @@
+{
+  "agent": "claude-code",
+  "axes": {
+    "atomicity": {
+      "reason": "One design element: the audit record and its log.",
+      "score": 2
+    },
+    "comprehensibility": {
+      "reason": "Clear.",
+      "score": 2
+    },
+    "decisions_documented": {
+      "reason": "DEC_AUDIT_FORMAT records the format and storage choice.",
+      "score": 2
+    },
+    "feasibility": {
+      "reason": "Implemented in audit.py.",
+      "score": 2
+    },
+    "parent_fit": {
+      "reason": "Realises REQ_LOG: the structure of the trail.",
+      "score": 2
+    },
+    "unambiguity": {
+      "reason": "Fields named after the review fix.",
+      "score": 2
+    },
+    "verifiability": {
+      "reason": "Fields, order and immutability are checkable.",
+      "score": 2
+    }
+  },
+  "criteria": "spec",
+  "criteria_fingerprint": "9476ed745aac678fbff56b38696478ed16eed75f93417ac547efe1fc877d2772",
+  "model": "claude-opus-5-5",
+  "need": "SPEC_AUDIT",
+  "reviewed_fingerprint": "49838287701ee902b70b35cb776ae3998585137565fff0228a900f9164699e2c",
+  "schema": 2,
+  "summary": "pilot review (plan 001 P8)"
+}

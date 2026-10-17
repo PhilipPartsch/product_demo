@@ -1,0 +1,37 @@
+name: Set up the docs toolchain
+description: Install ubc (pinned), uv (pytest, Sphinx) and graphviz (Sphinx needflow).
+
+inputs:
+  ubc-version:
+    description: ubc release to install; keep in sync with the local version and plan 998.
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Install ubc
+      shell: bash
+      working-directory: ${{ runner.temp }}
+      env:
+        UBC_VERSION: ${{ inputs.ubc-version }}
+      run: |
+        curl -fsSL -o ubc "https://download.useblocks.com/ubc/${UBC_VERSION}/ubc-linux-x64-${UBC_VERSION}"
+        chmod +x ubc
+        mkdir -p "$HOME/.local/bin"
+        mv ubc "$HOME/.local/bin/ubc"
+        echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v6
+
+    # Sphinx-Needs draws needflow with graphviz here (needs.flow_engine).
+    - name: Install graphviz
+      shell: bash
+      run: sudo apt-get update -q && sudo apt-get install -y -q graphviz
+
+    - name: Show versions
+      shell: bash
+      run: |
+        ubc --version
+        uv --version
+        dot -V

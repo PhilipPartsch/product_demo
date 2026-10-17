@@ -1,46 +1,74 @@
-# ubCode Full Example
+# ubCode product demo
 
-A guided tour of ubCode's main features in one project. It builds with both the
-`ubc` CLI and an upstream Sphinx + Sphinx-Needs build (`ubc script sphinx`).
-Build-variant data (`var.*`) resolves to the same values under ubCode and under
-Sphinx-Needs, which has shipped variant data since 8.2.0 (the `sphinx` script requires
-that release or newer).
+A small product (password hashing and an audit log, `src/`) documented with an
+engineering model in ubCode / Sphinx-Needs (`docs/`). It builds with both the
+`ubc` CLI and an upstream Sphinx + Sphinx-Needs build, and is driven by AI
+agents through `ubc agent` workflow stages.
 
 ## What this project shows
 
-- **Mixed RST + Markdown authoring.** Requirements live in reStructuredText
-  (`index.rst`), specifications in `specifications.rst`, and tests in Markdown /
-  MyST (`tests.md`). The `[parse.parsers.*]` tables in `ubproject.toml` route
-  each file to the right parser; all needs are indexed together.
-- **Multiple need types and links.** `req`, `spec`, and `test` types, linked
-  with `implements` (spec → req) and `tests` (test → req/spec) for
-  traceability.
-- **Typed fields.** `[needs.fields.*]` declares fields with types and defaults.
+- **A traced V-model.** User stories → requirements → specifications →
+  implementations (one-line codelinks markers in `src/`) and test
+  specifications → test results (pytest JUnit XML via Sphinx-Test-Reports).
+  One link name per edge: `satisfies`, `refines`, `implements`, `verifies`,
+  `executes`.
+- **Decisions and risks.** Decisions are nested inside the need they decide;
+  risks link the needs they affect and the needs that mitigate them, with
+  hash conditions that flag a risk as stale when a target changes.
+- **Schema validation.** `docs/schemas.json` checks elements and links in
+  both toolchains: violations always block, completeness findings (`info`)
+  block only a release.
+- **An agentic workflow.** `[workflow]` stages with author and review skills
+  (`.agents/skills/`, mirrored for Claude Code and GitHub Copilot), templates
+  (`.agents/templates/`) and quality packs (`docs/quality/`).
 - **Build variants ("150% model").** `variants.json` plus inline
-  `[needs.variant_data]` drive `<<...>>` variant functions and `<{ var.* }>`
-  variant-data references on fields that set `parse_variants = true`.
-- **Reports.** A starter Jinja2 report lives under `reports/`.
+  `[needs.variant_data]` feed `<{ var.* }>` references.
+- **Reports.** Decision and risk overviews (`docs/reports/`) and a starter
+  Jinja2 report.
+
+The model, the workflow, decisions / risks and the CI gates are documented in
+`docs/engineering_model/`. The plans that built it are in `.agents/plans/`.
 
 ## Build it
 
-Run the configured scripts with `ubc script <name>`:
+Run the configured scripts from `docs/` with `ubc script <name>`:
 
 ```bash
-ubc script build       # index the project and report warnings
-ubc script needs       # write needs.json
-ubc script documents   # list source documents and their parser (rst / myst)
-ubc script report      # render reports/needs_overview.html.j2
+ubc script tests       # pytest; writes the JUnit XML the test-result needs come from
+ubc script ci          # tests, then lint (ubc check), then the HTML site
 ubc script sphinx      # build HTML with Sphinx + Sphinx-Needs (needs uv)
+ubc script needs       # write needs.json
+ubc script report      # render reports/needs_overview.html.j2
 ```
+
+Run `ubc script tests` before any other build: without the JUnit XML the
+test-result needs are missing.
+
+## Work with the agents
+
+```bash
+cd docs
+ubc agent status       # state of every workflow stage
+ubc agent next         # the next action
+ubc agent prompt       # that action as an instruction
+ubc agent run          # execute it with the headless runner ([agent.runner])
+```
+
+After a risk was re-evaluated, sign off its links:
+`python3 scripts/refresh_risk_links.py <RISK_ID>`. After editing a skill in
+`.agents/skills/`, copy it to the other harnesses:
+`python3 scripts/mirror_skills.py`. Never run `ubc agent update` in the
+repository (see `.agents/plans/998-tool-bug-recheck.md` §4.7).
 
 ## Explore further
 
 ```bash
 # Query needs with a filter expression (requires an active license):
-ubc query filter "type == 'spec'"
+ubc query filter "type == 'risk' and status == 'open'"
 
-# Compare two build variants:
+# Compare two build variants (note: `-c` replaces the whole nested table,
+# plan 999 UB-05):
 ubc build needs -o needs.linux.json
-ubc build needs -c 'needs.variant_data.platform = "windows"' -o needs.windows.json
+ubc build needs -c 'needs.variant_data = { edition = "pro", platform = "windows" }' -o needs.windows.json
 ubc diff --needs needs.linux.json --needs needs.windows.json
 ```

@@ -1,0 +1,33 @@
+{
+  "agent": "claude-code",
+  "axes": {
+    "decisions_documented": {
+      "reason": "DEC_TSPEC_HASH_REAL records testing with the real hash.",
+      "score": 2
+    },
+    "parent_fit": {
+      "reason": "Verifies SPEC_HASH.",
+      "score": 2
+    },
+    "pass_criteria": {
+      "reason": "Two observable criteria.",
+      "score": 2
+    },
+    "reproducibility": {
+      "reason": "Inputs and steps fully given.",
+      "score": 2
+    },
+    "spec_coverage": {
+      "reason": "Salt length, stored format and constant-time comparison of SPEC_HASH are not checked.",
+      "score": 1,
+      "suggestion": "Add checks for the salt length and the stored format."
+    }
+  },
+  "criteria": "test_spec",
+  "criteria_fingerprint": "e613cd2db1194c84f8f1953b73fd179efe320a68428c3c51de08d78f06e03eeb",
+  "model": "claude-opus-5-5",
+  "need": "TSPEC_HASH",
+  "reviewed_fingerprint": "0a8a3f3a997f24472c6ee75a4163a296c5fa9707cdc71cd266944f245d64e556",
+  "schema": 2,
+  "summary": "pilot review (plan 001 P8)"
+}
