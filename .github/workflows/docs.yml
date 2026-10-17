@@ -1,0 +1,48 @@
+name: docs
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+env:
+  # Keep in sync with the ubCode version used locally.
+  UBC_VERSION: "0.37.0"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: docs
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install ubc
+        working-directory: ${{ runner.temp }}
+        run: |
+          curl -fsSL -o ubc "https://download.useblocks.com/ubc/${UBC_VERSION}/ubc-linux-x64-${UBC_VERSION}"
+          chmod +x ubc
+          mkdir -p "$HOME/.local/bin"
+          mv ubc "$HOME/.local/bin/ubc"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Show ubc version
+        run: ubc --version
+
+      - name: Check the project
+        run: ubc script check
+
+      - name: Build the HTML site
+        run: ubc script html
+
+      # The site is written before the quality gate decides the exit code, so
+      # upload it even when the build failed — that is when it is most useful.
+      - name: Upload the site
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: site
+          path: docs/_build/html
+          if-no-files-found: ignore
