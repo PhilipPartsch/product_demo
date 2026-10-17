@@ -10,6 +10,9 @@ after:   us ← req ← arch ← spec ← impl / test_spec
 
 (`←` = "links up to"; decisions and risks attach as before.)
 
+> The architecture elements and the rest of the demo content were removed
+> by [plan 003](003-remove-test-data.md); the model change itself stays.
+
 This is the first **model change** on an existing configuration, so besides
 the change itself it tests how the playbook handles changes: migrating
 existing needs, keeping links / schema / workflow in sync, re-reviewing.

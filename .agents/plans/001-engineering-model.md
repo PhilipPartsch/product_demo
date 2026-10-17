@@ -50,6 +50,10 @@ At the end:
 - one full pilot chain exists and passes CI 2 locally (§6 phase P8);
 - plan 100 is updated with the lessons of this run (§9).
 
+> The demo content built here (needs, `src/`, tests, verdicts) was removed
+> again by [plan 003](003-remove-test-data.md); the repository is an empty
+> starter. Ids in this plan refer to that removed content.
+
 **Result (P9, 2026-10-17): all goals met.** Schema in both toolchains
 (37 needs identical); config-validate / doctor ok; `src/` + `tests/` with
 markers and JUnit, mounted; 10 own skills mirrored; model docs and reports;

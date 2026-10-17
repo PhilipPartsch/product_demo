@@ -99,7 +99,7 @@ Every need has an explicit id matching ``^[A-Z]+_[A-Z][A-Z0-9_]*$``.
 Where the needs come from:
 
 - ``impl``: one-line markers in ``src/`` (Sphinx-Codelinks), for example
-  ``# @Salted scrypt password hashing, IMPL_HASH, impl, [SPEC_HASH], false, true``
+  ``# @Password check, IMPL_LOGIN, impl, [SPEC_LOGIN], false, true``
   (title, id, type, implemented specs, safety relevant, security relevant;
   all six are required). The page :ref:`full-impls` lives in ``src/`` and is
   mounted into these docs.

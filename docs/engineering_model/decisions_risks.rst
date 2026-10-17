@@ -34,14 +34,14 @@ Risks
   risk names its mitigation; an accepted risk is decided by an accepted
   decision. An open risk is allowed on ``main`` and blocks a release.
 - **Kept up to date by hash conditions:** each link carries the target's
-  fingerprint at the last evaluation, ``SPEC_HASH[fp=="…"]``. When the
+  fingerprint at the last evaluation, ``SPEC_X[fp=="…"]``. When the
   target changes, the build reports ``needs.link_condition_failed``: the
   risk is stale. Re-evaluate it (``review-risk``), update it if needed, then
   sign it off again:
 
   .. code-block:: bash
 
-     python3 scripts/refresh_risk_links.py RISK_SCRYPT_PARAMS
+     python3 scripts/refresh_risk_links.py RISK_X
 
   A stale risk is reported on ``main`` and blocks a release.
 

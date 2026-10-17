@@ -1,17 +1,24 @@
-# ubCode product demo
+# ubCode engineering-model starter
 
-A small product (password hashing and an audit log, `src/`) documented with an
-engineering model in ubCode / Sphinx-Needs (`docs/`). It builds with both the
-`ubc` CLI and an upstream Sphinx + Sphinx-Needs build, and is driven by AI
-agents through `ubc agent` workflow stages.
+An **empty, ready-to-use engineering model** in ubCode / Sphinx-Needs
+(`docs/`): need types, links, schema, workflow stages, AI skills, templates,
+quality packs, reports and a two-tier CI — no content yet. Put the product
+code in `src/` and its tests in `tests/`, then author the needs stage by stage
+with `ubc agent` (or by hand from the templates). It builds with both the
+`ubc` CLI and an upstream Sphinx + Sphinx-Needs build.
+
+The model was built and tried out with a demo product (login, lockout, audit
+log) that was removed again (plan 003); `.agents/plans/` documents how it was
+built and how to repeat it.
 
 ## What this project shows
 
-- **A traced V-model.** User stories → requirements → specifications →
+- **A traced V-model.** User stories → requirements → architecture
+  elements → specifications →
   implementations (one-line codelinks markers in `src/`) and test
   specifications → test results (pytest JUnit XML via Sphinx-Test-Reports).
-  One link name per edge: `satisfies`, `refines`, `implements`, `verifies`,
-  `executes`.
+  One link name per edge: `satisfies`, `fulfills`, `refines`, `implements`,
+  `verifies`, `executes`.
 - **Decisions and risks.** Decisions are nested inside the need they decide;
   risks link the needs they affect and the needs that mitigate them, with
   hash conditions that flag a risk as stale when a target changes.
@@ -34,7 +41,7 @@ The model, the workflow, decisions / risks and the CI gates are documented in
 Run the configured scripts from `docs/` with `ubc script <name>`:
 
 ```bash
-ubc script tests       # pytest; writes the JUnit XML the test-result needs come from
+ubc script tests       # pytest (no tests yet is fine); writes the JUnit XML the test-result needs come from
 ubc script ci          # tests, then lint (ubc check), then the HTML site
 ubc script sphinx      # build HTML with Sphinx + Sphinx-Needs (needs uv)
 ubc script needs       # write needs.json

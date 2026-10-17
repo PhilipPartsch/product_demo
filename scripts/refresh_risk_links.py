@@ -3,7 +3,7 @@
 Risks link to the needs they affect and to the needs that mitigate them with
 a condition on the target's derived fingerprint `fp` (docs/ubproject.toml):
 
-    :affects: SPEC_HASH[fp=="<fp of SPEC_HASH when the risk was evaluated>"]
+    :affects: SPEC_X[fp=="<fp of SPEC_X when the risk was evaluated>"]
 
 When a target changes, its `fp` changes and the build reports
 `needs.link_condition_failed`: the risk is stale and must be re-evaluated.

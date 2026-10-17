@@ -39,8 +39,9 @@ reading `.rst` files.
     `link-arch-req`); fields `trust_boundary`, `safety_relevant`,
     `security_relevant` (all required);
   - the **component diagram** at the top of `docs/architecture.rst`
-    (`.. mermaid::`, one node per element, arrows for "uses"): add or change
-    the nodes of the elements you author.
+    (`.. mermaid::`, `flowchart TD`, one node per element, arrows for
+    "uses"): create it below the page intro if it is missing, then add or
+    change the nodes of the elements you author.
 - **Downstream:** `specs` stage (`spec` `refines` → `arch`).
 - **Coverage:** every requirement in the briefing is fulfilled by at least
   one element (trace gate `fulfills`, schema rule `cov-req`).

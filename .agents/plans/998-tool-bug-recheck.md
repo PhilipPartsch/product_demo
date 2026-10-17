@@ -348,6 +348,7 @@ what to remove from this repository when the entry is fixed.
 | PH-21 | T1 / T3 | runner without `--allowedTools`, `ubc agent run --skill change-request` | `--allowedTools` stay (they are correct anyway) |
 | PH-22 | T1 / T3 | cascade after editing `REQ_LOCKOUT`: code stage report, nested decision | — (tests with literal values stay) |
 | PH-23 | T1 / T3 | scratch: insert a level, `ubc agent run --skill change-request --id <new parent>` | — (re-link by hand) |
+| PH-24 | T1 / T3 | scratch: active `test-file` on an empty JUnit file, no other needs, `ubc agent prompt` | `test-file` directive active from the start (no comment) |
 | SN-08 | T2 | `req` linking a `spec` via `satisfies` → console names the target | CI reads `schema_violations.json` anyway |
 | SN-09 | T2 | `needflow` without `flow_engine` and without PlantUML | `flow_engine = "graphviz"` may stay |
 | STR-06 | T2 | docs table of need types | — |
