@@ -3,8 +3,30 @@
 # Build-context tags, available as `build_tags` in filter/variant expressions.
 build_tags = ["html"]
 
+[lint]
+# Derived fields need sphinx-needs >= 9.0; the `sphinx` script pins
+# `sphinx-needs>=9.0`, so this notice is checked (it is `info` and would
+# otherwise fail CI 2's `ubc check --deny info`).
+ignore = ["config.derive_sphinx_minimum"]
+
 [source]
 extend_exclude = ["README.md", "_build"]
+
+# Docs that live next to the code (plan 001 P2). Only .rst / .md files are
+# mounted; `ubc check` does not read mounts, `ubc build` does.
+[[source.mounts]]
+dir = "../src"
+mount_at = "code"
+include = ["*.rst"]
+attach_to = "index"
+entry_doc = "implementations"
+
+[[source.mounts]]
+dir = "../tests"
+mount_at = "tests"
+include = ["*.rst"]
+attach_to = "index"
+entry_doc = "test_results"
 
 # Run with `ubc script <name>` (e.g. `ubc script build`).
 [scripts]
@@ -14,15 +36,19 @@ build = "ubc build index ."
 check = "ubc check --deny warning"
 # Static HTML site into _build/html; fails on any warning by default.
 html = "ubc build html"
-# What CI runs: lint first, then build the site.
-ci = { chain = ["check", "html"] }
+# Run the pytest suite; writes the JUnit XML the test-result needs are built
+# from, so it has to run before `check`, `html` and `sphinx`.
+tests = "uv run --no-project --with pytest pytest -q -c ../pyproject.toml --rootdir=.. --junitxml=../tests/_results/junit.xml ../tests"
+# What CI runs: tests first (they feed the docs), then lint, then build the site.
+ci = { chain = ["tests", "check", "html"] }
 needs = "ubc build needs -o needs.json"
 documents = "ubc build list-documents --parser"
 report = "ubc report needs_overview.html.j2"
 # Build with Sphinx + Sphinx-Needs (requires https://docs.astral.sh/uv).
-# sphinx-needs >= 8.2 for the variant data (`variant_data*`, `parse_variants`);
+# sphinx-needs >= 9.0 for derived fields (`derive`: `fp`, `parent`), >= 8.2
+# for the variant data (`variant_data*`, `parse_variants`);
 # no upper bound so it tracks releases (verified against sphinx-needs 8.5.0).
-sphinx = "uv run --no-project --with 'sphinx,sphinx-needs>=8.2,myst-parser' sphinx-build -W -b html . _build"
+sphinx = "uv run --no-project --with 'sphinx,sphinx-needs>=9.0,myst-parser,sphinxcontrib-mermaid,sphinx-codelinks,sphinx-test-reports,sphinx-mounts' sphinx-build -W -b html . _build"
 rm_build = "rm -rf _build"
 "sphinx:clean" = { chain = ["rm_build", "sphinx"] }
 
@@ -34,6 +60,15 @@ rm_build = "rm -rf _build"
 [parse.parsers.md]
 flavour = "myst"
 
+# --- Need types (engineering model, plan 001 §2) ---
+# Test results (test-file / test-suite / test-case) come from [test_reports]
+# and must NOT be declared here (plan 999 STR-03).
+
+[[needs.types]]
+directive = "us"
+title = "User Story"
+prefix = "US_"
+
 [[needs.types]]
 directive = "req"
 title = "Requirement"
@@ -44,33 +79,142 @@ directive = "spec"
 title = "Specification"
 prefix = "SPEC_"
 
+# Authored as a one-line codelinks marker in ../src (plan 001 P2).
 [[needs.types]]
-directive = "test"
-title = "Test"
-prefix = "TEST_"
+directive = "impl"
+title = "Implementation"
+prefix = "IMPL_"
+
+[[needs.types]]
+directive = "test_spec"
+title = "Test Specification"
+prefix = "TSPEC_"
+
+# Nested inside the need it decides about, plus an explicit `decides` link.
+[[needs.types]]
+directive = "dec"
+title = "Decision"
+prefix = "DEC_"
+
+[[needs.types]]
+directive = "risk"
+title = "Risk"
+prefix = "RISK_"
 
 [needs]
+# needflow in the Sphinx build: graphviz (`dot`) instead of the default
+# PlantUML, which is not installed (ubc draws needflow with mermaid anyway).
+flow_engine = "graphviz"
+id_required = true
+id_regex = "^[A-Z]+_[A-Z][A-Z0-9_]*$"
+# Element and link rules (plan 001 §4.1).
+schema_definitions_from_json = "schemas.json"
 # Base "150%" variant data shared by every build (see variants.json), with
 # inline overrides below.
 variant_data_file = "variants.json"
 
-# Traceability links between needs (dict form, the recommended style).
-[needs.links.implements]
-outgoing = "Implements"
-incoming = "Implemented by"
+# --- Links (plan 001 §4): one link name per edge ---
+[needs.links.satisfies]
+outgoing = "satisfies"
+incoming = "satisfied by"
 
-[needs.links.tests]
-outgoing = "Tests"
-incoming = "Tested by"
+[needs.links.refines]
+outgoing = "refines"
+incoming = "refined by"
+
+[needs.links.implements]
+outgoing = "implements"
+incoming = "implemented by"
+
+[needs.links.verifies]
+outgoing = "verifies"
+incoming = "verified by"
+
+# test-case (Sphinx-Test-Reports) -> test_spec, filled from a pytest property.
+[needs.links.executes]
+outgoing = "executes"
+incoming = "executed by"
+
+[needs.links.decides]
+outgoing = "decides"
+incoming = "decided by"
+# A nested decision decides its parent without writing `:decides:` (plan 001
+# G5). An explicit `:decides:` replaces this, so it must name the parent too.
+# `predicates`, not `default`: a default would apply to every type and warn
+# on each need without a parent.
+predicates = [["type == 'dec'", "[[copy('parent_need')]]"]]
+
+[needs.links.affects]
+outgoing = "affects"
+incoming = "affected by"
+
+[needs.links.mitigated_by]
+outgoing = "mitigated by"
+incoming = "mitigates"
 
 [needs.variant_data]
 edition = "pro"
 
-# `parse_variants = true` enables `<<...>>` variant functions and
-# `<{ var.* }>` variant-data references in the field's value.
+# --- Fields (plan 001 §3) ---
+# `status` is the lifecycle of decisions and risks only; no other type carries
+# one. No default: a field default would apply to every type. schemas.json
+# requires it on `dec` / `risk` (own value sets) and forbids it elsewhere.
 [needs.fields.status]
-parse_variants = true
-default = ""
+schema.type = "string"
+schema.enum = ["proposed", "accepted", "superseded", "open", "mitigated", "closed"]
+
+[needs.fields.safety_relevant]
+description = "The need is relevant for functional safety"
+schema.type = "boolean"
+
+[needs.fields.security_relevant]
+description = "The need is relevant for security"
+schema.type = "boolean"
+
+[needs.fields.test_level]
+description = "Test level of a test specification"
+schema.type = "string"
+schema.enum = ["unit", "integration", "system"]
+
+[needs.fields.risk_category]
+description = "Kind of risk"
+schema.type = "string"
+schema.enum = ["safety", "security", "technical", "project", "ai-workflow"]
+
+[needs.fields.severity]
+description = "Impact of a risk"
+schema.type = "string"
+schema.enum = ["low", "medium", "high"]
+
+[needs.fields.likelihood]
+description = "Probability of a risk"
+schema.type = "string"
+schema.enum = ["low", "medium", "high"]
+
+# Derived fields (Sphinx-Needs >= 9.0, plan 001 G5).
+# `fp`: content fingerprint of every need (id, type, title, status, tags,
+# content, declared fields, links). Risks link to their needs with
+# `TARGET[fp=="<fp at evaluation>"]`; a changed target fails the condition
+# (`needs.link_condition_failed`) — the risk must be re-evaluated and its
+# conditions refreshed (scripts/refresh_risk_links.py).
+[needs.fields.fp]
+description = "Content fingerprint (derived)"
+schema.type = "string"
+derive = { kind = "fingerprint" }
+
+# `parent`: the need a need is nested in. A copy of `parent_need`, because
+# ubc's schema rules cannot see `parent_need` itself (plan 999 UB-25).
+[needs.fields.parent]
+description = "The need this need is nested in (derived from parent_need)"
+schema.type = "string"
+derive = { kind = "copy", field = "parent_need" }
+
+# Provenance for `ubc agent reverse` (from the vmodel profile): the
+# repository-relative source files a need was recovered from.
+[needs.fields.recovered_from]
+description = "Repository-relative source files this need was recovered from"
+schema.type = "array"
+schema.items.type = "string"
 
 [needs.fields.platform_note]
 description = "Note describing the active platform"
@@ -78,3 +222,251 @@ type = "string"
 nullable = true
 default = ""
 parse_variants = true
+
+# --- Sphinx-Codelinks (plan 001 P2): `impl` needs from one-line markers ---
+# Relative paths resolve against this file's directory (docs/).
+[codelinks]
+# No local URLs: they would publish absolute local paths (plan 999 UB-01,
+# UB-14). Remote links point to GitHub instead.
+set_local_url = false
+set_remote_url = true
+
+[codelinks.projects.code]
+remote_url_pattern = "https://github.com/PhilipPartsch/product_demo/blob/{commit}/{path}#L{line}"
+
+[codelinks.projects.code.source_discover]
+src_dir = "../src"
+comment_type = "python"
+
+[codelinks.projects.code.analyse]
+get_oneline_needs = true
+get_need_id_refs = false
+
+# Marker: `# @<title>, <IMPL_ID>, impl, [<SPEC_ID>, ...], <safety>, <security>`
+[codelinks.projects.code.analyse.oneline_comment_style]
+field_split_char = ","
+needs_fields = [
+  { name = "title", type = "str" },
+  { name = "id", type = "str" },
+  # Positional and all required: every marker states its links and its
+  # safety / security relevance explicitly.
+  { name = "type", type = "str" },
+  { name = "implements", type = "list[str]" },
+  { name = "safety_relevant", type = "str" },
+  { name = "security_relevant", type = "str" },
+]
+
+# --- Sphinx-Test-Reports (plan 001 P2): test results from pytest JUnit XML ---
+# Declares the test-file / test-suite / test-case types itself (do not add
+# them to [[needs.types]], plan 999 STR-03).
+[test_reports]
+# Input root for test reports (ubc resolves `:file:` against it, see plan 999).
+rootdir = "../tests"
+# pytest `record_property("executes", "TSPEC_…")` -> `executes` link.
+property_link_types = { executes = "executes" }
+
+
+# --- Workflow (plan 001 §5.1): need-to-need stages for `ubc agent` ---
+# Routes are relative to this file. One file per stage (granularity single):
+# the project is small, a per-stream folder layout would add nothing. Scope
+# `stream` anchors each prompt on one stream, so a new need links only its own
+# parent; with scope `global` the prompt orders links to ALL needs of the up
+# type (plan 999 PH-16).
+[workflow]
+# User stories are roots: nothing links up from them.
+orphan_exempt_types = ["us"]
+exempt_status = []
+# Only decisions and risks carry a status; open / proposed ones block a
+# release (CI 2). Completeness of the other types is checked by the trace
+# gates, the schema info rules and the review verdicts.
+release_disallow_status = ["open", "proposed"]
+
+# No [workflow.lifecycle]: its `states` gate requires a declared status on
+# EVERY need (no per-type scope, plan 999 PH-14), but only decisions and risks
+# carry one. schemas.json checks the status values per type instead
+# (`status-dec`, `status-risk`, `status-none`).
+
+[workflow.diagram]
+enabled = false
+format = "mermaid"
+
+[[workflow.stages]]
+id = "user_stories"
+produces = "us"
+author_skill = "draft-us"
+review_skill = "review-feat"
+authoring = "Write one user story per distinct user goal (As a <role>, I want <goal>, so that <benefit>). Before writing, check the existing user stories: never add one whose goal another already covers. Record every choice between alternatives with the record-dec skill and every risk you see with the record-risk skill (hand over the full payload). Write no `:status:` field: only decisions and risks have a status (schemas.json rule status-none) — this overrides the generic `:status:` line of the instruction."
+[workflow.stages.route]
+scope = "stream"
+granularity = "single"
+path = "user_stories.rst"
+
+[[workflow.stages]]
+id = "reqs"
+produces = "req"
+depends_on = ["user_stories"]
+author_skill = "draft-requirement"
+review_skill = "review-requirement"
+authoring = "Decompose the user story into the complete set of requirements it implies (happy path, error and edge cases, relevant non-functional constraints), one shall-clause each, each satisfying the user story. Record every choice between alternatives with the record-dec skill and every risk you see with the record-risk skill (hand over the full payload). Write no `:status:` field: only decisions and risks have a status (schemas.json rule status-none) — this overrides the generic `:status:` line of the instruction."
+[workflow.stages.route]
+scope = "stream"
+granularity = "single"
+path = "requirements.rst"
+[[workflow.stages.trace]]
+up = "us"
+link = "satisfies"
+direction = "both"
+min = 1
+
+[[workflow.stages]]
+id = "specs"
+produces = "spec"
+depends_on = ["reqs"]
+author_skill = "draft-spec"
+review_skill = "review-spec"
+authoring = "Specify how each requirement is met: one specification per distinct design element, each refining the requirement(s) it realises, specific enough to implement and to test. Record every choice between alternatives with the record-dec skill and every risk you see with the record-risk skill (hand over the full payload). Write no `:status:` field: only decisions and risks have a status (schemas.json rule status-none) — this overrides the generic `:status:` line of the instruction."
+[workflow.stages.route]
+scope = "stream"
+granularity = "single"
+path = "specifications.rst"
+[[workflow.stages.trace]]
+up = "req"
+link = "refines"
+direction = "both"
+min = 1
+
+[[workflow.stages]]
+id = "code"
+produces = "impl"
+depends_on = ["specs"]
+author_skill = "draft-impl"
+authoring = "Implement each specification in ../src with a one-line marker `# @<title>, <IMPL_ID>, impl, [<SPEC_ID>], <safety_relevant>, <security_relevant>` above the code that realises it. Record every risk you see with the record-risk skill (hand over the full payload). Write no `:status:` field: only decisions and risks have a status (schemas.json rule status-none) — this overrides the generic `:status:` line of the instruction."
+[workflow.stages.route]
+scope = "stream"
+granularity = "global"
+path = "../src"
+[[workflow.stages.trace]]
+up = "spec"
+link = "implements"
+direction = "both"
+min = 1
+
+[[workflow.stages]]
+id = "test_specs"
+produces = "test_spec"
+depends_on = ["specs"]
+author_skill = "draft-test-spec"
+review_skill = "review-test-spec"
+authoring = "Write one test specification per verifiable obligation of the specification (incl. implied error cases), each verifying the specification, with preconditions, inputs, steps and observable pass criteria. Record every choice between alternatives with the record-dec skill and every risk you see with the record-risk skill (hand over the full payload). Write no `:status:` field: only decisions and risks have a status (schemas.json rule status-none) — this overrides the generic `:status:` line of the instruction."
+[workflow.stages.route]
+scope = "stream"
+granularity = "single"
+path = "verification.rst"
+[[workflow.stages.trace]]
+up = "spec"
+link = "verifies"
+direction = "both"
+min = 1
+
+# No `test_results` stage: `config-validate` does not know the types that
+# [test_reports] declares (plan 999 PH-12), and declaring them in
+# [[needs.types]] breaks Sphinx (STR-03). Test results are checked by
+# schemas.json (`cov-tspec-result`, `link-result-tspec`) and CI 2 (all passed).
+
+# Decisions and risks are created by the stage skills, which hand a complete
+# payload to the simple recording skills record-dec (nests the `dec` inside
+# its parent) and record-risk (plan 001 §5.3). These two stages exist for
+# review and verdicts only: a global stage's prompt asks for ONE element
+# covering ALL needs of its `up` type and routes to files, not into needs
+# (plan 999 PH-16), so they are not authored through `ubc agent prompt
+# --stage`. Required decisions (us / req / spec / test_spec) and risk
+# completeness are schema rules (dec-present, dec-nested, link-dec,
+# risk-open, dec-proposed, …).
+# The `decisions` stage carries `outgoing` trace edges (not gated, so no
+# gaps): they make the one-hop review fingerprint follow `decides`, so a
+# changed parent outdates the decision's verdict (plan 999 PH-19, G5 option
+# F). Risks use hash-conditioned links instead (`fp`, above), so the `risks`
+# stage carries no trace edge.
+[[workflow.stages]]
+id = "decisions"
+produces = "dec"
+optional = true
+author_skill = "record-dec"
+review_skill = "review-decision"
+authoring = "Do not author decisions through this stage: the stage skills create them with record-dec, nested inside the need they decide. A new `dec` has `:status: proposed` — this overrides the generic `:status:` line of the instruction."
+[workflow.stages.route]
+scope = "global"
+granularity = "per-need"
+path = "{id}"
+[[workflow.stages.trace]]
+up = "us"
+link = "decides"
+direction = "outgoing"
+min = 1
+[[workflow.stages.trace]]
+up = "req"
+link = "decides"
+direction = "outgoing"
+min = 1
+[[workflow.stages.trace]]
+up = "spec"
+link = "decides"
+direction = "outgoing"
+min = 1
+[[workflow.stages.trace]]
+up = "test_spec"
+link = "decides"
+direction = "outgoing"
+min = 1
+
+[[workflow.stages]]
+id = "risks"
+produces = "risk"
+optional = true
+author_skill = "record-risk"
+review_skill = "review-risk"
+authoring = "Do not author risks through this stage: the stage skills create them with record-risk in risks.rst. A new `risk` has `:status: open` — this overrides the generic `:status:` line of the instruction."
+[workflow.stages.route]
+scope = "global"
+granularity = "single"
+path = "risks.rst"
+
+# --- Quality (plan 001 §5.4): own packs per reviewed type ---
+[quality]
+enabled = true
+
+[quality.required]
+parent_fit = 1
+
+[quality.type_configs.us]
+criteria_file = "quality/us.toml"
+
+[quality.type_configs.us.required]
+no_overlap = 2
+
+[quality.type_configs.req]
+criteria_file = "quality/req.toml"
+
+[quality.type_configs.spec]
+criteria_file = "quality/spec.toml"
+
+[quality.type_configs.test_spec]
+criteria_file = "quality/test_spec.toml"
+
+[quality.type_configs.dec]
+criteria_file = "quality/dec.toml"
+
+[quality.type_configs.dec.required]
+context_present = 1
+
+[quality.type_configs.risk]
+criteria_file = "quality/risk.toml"
+
+# --- Agent runner (consumed by `ubc agent run`) ---
+# Headless Claude Code; the prompt (skill + context briefing + route) arrives
+# on stdin. Changes stay uncommitted for review. Override per machine with
+# UBC_AGENT_RUNNER / UBC_AGENT_RUNNER_MODEL / UBC_AGENT_RUNNER_TIMEOUT.
+[agent.runner]
+command = "claude -p --permission-mode acceptEdits --output-format stream-json --verbose"
+model = "sonnet"
+timeout_secs = 900

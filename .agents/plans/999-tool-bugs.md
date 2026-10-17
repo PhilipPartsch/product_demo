@@ -33,7 +33,7 @@ here names `product_demo` (plan 998 §3).
 `spec` / `test`, links `implements` / `tests`, mixed RST + MyST, variant data
 (`docs/variants.json`, `[needs.variant_data]`, `parse_variants` on `status` and
 `platform_note`). It builds with ubc (`ubc script ci`, CI in
-`.github/workflows/docs.yml`) and with Sphinx + Sphinx-Needs (`ubc script
+`.github/workflows/ci-main.yml` / `ci-release.yml` (setup: `.github/actions/setup/action.yml`)) and with Sphinx + Sphinx-Needs (`ubc script
 sphinx`, via `uv`). Pharaoh skills (profile `vmodel` 21) and quality packs
 (`docs/quality/*.toml`) are installed, but `docs/ubproject.toml` has no
 `[workflow]` / `[quality]` section yet. Not used here: external needs,
@@ -60,7 +60,7 @@ no entry is re-tested yet; re-tests follow
 
 | Tool | Kind | Version here | Findings made with | Used here | Section |
 |---|---|---|---|---|---|
-| ubCode (VS Code extension) + `ubc` CLI | commercial | 0.37.0 (`UBC_VERSION` in `.github/workflows/docs.yml`; extension 0.37.0) | 0.35.0; re-tested 0.37.0 (origin) | yes | §3 |
+| ubCode (VS Code extension) + `ubc` CLI | commercial | 0.37.0 (`UBC_VERSION` in `.github/workflows/ci-main.yml` / `ci-release.yml`; extension 0.37.0) | 0.35.0; re-tested 0.37.0 (origin) | yes | §3 |
 | Pharaoh (agentic engineering, `ubc agent`, `.pharaoh/`) | commercial | in ubc 0.37.0, profile `vmodel` 21 (`docs/.pharaoh/agent/install-manifest`) | 0.35.0; re-tested 0.37.0 (origin) | skills installed, no `[workflow]` yet | §4 |
 | Sphinx-Needs | open source | **unpinned** `>=8.2` (`docs/ubproject.toml:25`, script `sphinx`; comment says verified against 8.5.0) | 8.5.0; re-tested 9.0.0 (origin) | yes | §5 |
 | Sphinx-Codelinks ("Codelinks") | open source | — | 1.4.0; re-tested 2.0.0 (origin) | no | §6 |
@@ -79,11 +79,11 @@ documentation, convenience.
 
 | ID | Tool | Severity | Origin | Here | Summary |
 |---|---|---|---|---|---|
-| UB-01 | ubc | medium | external | applies (`ubc script needs`) | export has no `docname`, but absolute local paths (`__source__`, codelinks `local-url`) |
+| UB-01 | ubc | medium | external | applies (`ubc build needs`: no `docname` on any need since plan 001 P2; codelinks `local-url` avoided with `set_local_url = false`) | export has no `docname`, but absolute local paths (`__source__`, codelinks `local-url`) |
 | UB-02 | ubc | high | external | n/a (no external needs) | one `null` in a declared non-nullable field drops the whole external-needs source |
 | UB-03 | ubc | medium | external | latent (variant keys) | Python keyword in a `var.*` key accepted; Sphinx cannot evaluate it |
 | UB-04 | ubc | medium | external | latent (uses `[needs] variant_data_file`; `[variants]` works since 0.37.0) | `[variants] data_file` is silently ignored — **fixed in 0.37.0** (with Sphinx-Needs 9.0.0) |
-| UB-05 | ubc | medium | external | applies? (README `-c 'needs.variant_data.platform = …'`, unverified) | `-c` override of a nested table replaces the whole table |
+| UB-05 | ubc | medium | external | applies (confirmed 2026-10-17, plan 001 P1: `ubc check -c 'needs.fields.status.schema = …'` made `platform_note` unknown) | `-c` override of a nested table replaces the whole table |
 | UB-06 | ubc | low | external | latent (parity check) | empty link lists omitted from `needs.json` (Sphinx writes `[]`) |
 | UB-07 | ubc | medium | external | n/a | backlinks on external needs not filled (`allocated_from`) — HTML not reproducible on 0.37.0; JSON part = UB-15 |
 | UB-08 | ubc | low | external | n/a | `needs.builder_filter` ignored |
@@ -91,12 +91,18 @@ documentation, convenience.
 | UB-10 | ubc | low | external | n/a (no `variant_sources`) | info `variant_sources_sphinx_unsupported` is outdated / misleading |
 | UB-12 | ubc + Sphinx-Needs | medium | external | latent (named variants, `if`) | `if` does not resolve named variants (`[needs.variants]`) |
 | UB-13 | ubc + Sphinx-Needs | medium | external | n/a | imported needs of an undeclared type dropped, undeclared fields stripped, silently — not reproducible on 0.37.0 / 9.0.0 (diagnostics exist) |
-| UB-14 | ubc | medium | external | n/a (no codelinks; HTML is uploaded by CI) | ubCode HTML: source links as plain text, absolute local path published |
+| UB-14 | ubc | medium | external | applies (plan 001 P2: `code/implementations` shows the GitHub `remote-url` as plain text; local path avoided with `set_local_url = false`) | ubCode HTML: source links as plain text, absolute local path published |
 | UB-15 | ubc | low | external | latent (parity check) | `ubc build needs` exports no backlinks (`<link>_back`); Sphinx does |
 | UB-16 | ubc | medium | external | n/a | external source dropped when its `needs_schema` has `default: null` for a field declared non-nullable |
 | UB-17 | ubc + Sphinx-Needs | low | external | n/a | `needimport` ignored `id_regex` in ubc only — **resolved** with Sphinx-Needs 9.0.0 (neither checks imports) |
 | UB-18 | ubc | high | external | n/a | Sphinx-Test-Reports directives unknown — **fixed in 0.37.0** |
-| UB-19 | ubc + Sphinx-Needs | low | external | latent (`id_regex`) | local need with an id outside `id_regex`: ubc warns and keeps it, Sphinx drops it |
+| UB-19 | ubc + Sphinx-Needs | low | external | applies (`id_regex` since plan 001 P1) | local need with an id outside `id_regex`: ubc warns and keeps it, Sphinx drops it |
+| UB-20 | ubc | low | product_demo | applies (`docs/schemas.json`) | schema: a missing required link is reported twice (local `required` + network `local_fail`); Sphinx reports it once |
+| UB-21 | ubc + Sphinx-Needs | medium | product_demo | applies (`docs/schemas.json`) | schema keyword outside the supported subset (e.g. `not`): ubc warns and applies **no** rule of the file; Sphinx aborts the build |
+| UB-22 | ubc + Sphinx-Test-Reports | medium | product_demo | applies (`tests/test_results.rst`, `[test_reports] rootdir`) | `test-file` `:file:` resolved against `rootdir` for reading but against `confdir` for the mount check; a file inside `rootdir = ".."` is "outside the root" |
+| UB-23 | ubc | low | product_demo | applies (found in plan 001 P2) | unknown keys in `[parse.parsers.*]` are accepted without a warning |
+| UB-24 | ubc + Sphinx-Needs | medium | product_demo | latent (conditional links, plan 001 P5) | link condition with an inner `[`: single brackets `ID[fp[:12]=="…"]` drop the condition silently in both tools; double brackets `ID[[fp[:12]=="…"]]` are `link_condition_invalid` in ubc but valid (and checked) in Sphinx |
+| UB-25 | ubc + Sphinx-Needs | medium | product_demo | applies (plan 001 P6: `dec-nested` uses the derived field `parent` instead) | schema rules cannot see the core field `parent_need` in ubc: `required: ["parent_need"]` fails for every nested need (Sphinx: only for non-nested ones) |
 | PH-01 | Pharaoh | **high** | external | latent (`[workflow]` + variants) | verdicts stored per need id only: alternatives with one id overwrite each other |
 | PH-02 | Pharaoh | **high** | external | latent (`[workflow]`; `REQ_AUTH` has variant fields) | review fingerprint ignores resolved field values and link variants |
 | PH-03 | Pharaoh | medium | external | latent (`[workflow]`) | fingerprint follows parents one level only (children / decisions flip, grandchildren not) |
@@ -105,11 +111,18 @@ documentation, convenience.
 | PH-06 | Pharaoh | medium | external | n/a (no imports) | `agent status` / `next` count imported (`exempt_status`) needs as stage output |
 | PH-07 | Pharaoh | low | external | n/a (no imports) | `review-brief` lists imported (`exempt_status`) needs as review targets |
 | PH-08 | Pharaoh | low | external | latent (`[workflow]`) | `agent audit` omits `value`, `tags` and `refines` / `allocates` in `trace` |
-| PH-09 | Pharaoh | low | external | latent (all skills here are in the manifest) | `doctor` checks only the `.claude` copy of project skills |
+| PH-09 | Pharaoh | low | external | applies (plan 001 P4: 8 own skills; drift not detected) | `doctor` checks only the `.claude` copy of project skills |
 | PH-10 | Pharaoh | low | external | applies (installed `review-*` skills) | brief / skills: `submit_command` without `-p`, `stale` bucket undocumented |
 | PH-11 | Pharaoh | low | external | applies (`.claude/skills/review-*/SKILL.md:49`) | skills document `review-brief --ids <ID,...>`, the CLI rejects the comma list; TYPE + `--ids` is refused |
-| PH-12 | Pharaoh | medium | external | n/a | `config-validate` / `doctor`: a type declared by `[test_reports]` counts as undeclared |
+| PH-12 | Pharaoh | medium | external | applies (plan 001 P3: stage `produces = "testcase"` → `undeclared_type`; no `test_results` stage, schema rules instead) | `config-validate` / `doctor`: a type declared by `[test_reports]` counts as undeclared |
 | PH-13 | Pharaoh | medium | external | n/a | outgoing trace obligation (`min = 1`) met by any link, e.g. STR's generic `links` |
+| PH-14 | Pharaoh | medium | product_demo | applies (plan 001 P3: `[workflow.lifecycle]` left out) | `[workflow.lifecycle] states` gate applies to every need: needs of types without a lifecycle (no `status`) are all `status_undeclared`; no per-type scope |
+| PH-15 | Pharaoh | medium | product_demo | applies (all stages) | author prompt orders `:status: draft` (no lifecycle) or the first lifecycle state for every type, and declares it authoritative over the skill |
+| PH-16 | Pharaoh | medium | product_demo | applies (decisions / risks stages) | cross-cutting stage (global scope): prompt demands one element linking **all** needs of the `up` type; routes cannot point into a need, so nested decisions cannot be routed |
+| PH-17 | Pharaoh | low | product_demo | applies (single-file routes) | author prompt says "CREATE THE FILE at `<path>`" for an existing single-file route (e.g. `requirements.rst`); a headless runner may overwrite it |
+| PH-18 | Pharaoh | medium | product_demo | applies (plan 001 P4 follow-up: 11 skills removed, 2 replaced) | no way to opt out of preset assets: `ubc agent update` re-adds removed skills to the manifest and restores them on the next run; a replaced skill is a conflict on every run (`ok: false`); `doctor` errors on an edited installed skill |
+| PH-19 | Pharaoh | medium | product_demo | workaround found (plan 001 P5: `outgoing` trace edges on the decisions / risks stages) | verdict fingerprints ignore cross-cutting links: a `dec` / `risk` stays fresh when what it decides / affects / is mitigated by changes; `impact` does not reach nested decisions; a parent's fingerprint includes its nested decisions' text |
+| PH-20 | Pharaoh | medium | product_demo | applies (plan 001 P7: CI 1 uses `scripts/ci_gates.py` instead) | `release-check` baseline unusable for a two-tier CI: help says "a JSON gap-key list", the tool wants a map of an undocumented key to a count; `--update-baseline` only writes on a passing run; missing reviews and open / proposed statuses count as gaps, no category filter |
 | SN-01 | Sphinx-Needs | medium | external | latent (schemas; `sphinx` script runs `-W`) | every schema severity is a Sphinx warning; `-W` fails on `warning` rules |
 | SN-02 | Sphinx-Needs | medium | external | n/a | `needs_from_toml` overrides `needs_external_needs` from `conf.py` |
 | SN-03 | Sphinx-Needs | low | external | n/a | `needs.json` drops external needs by default (`builder_filter`), unlike ubc |
@@ -117,13 +130,15 @@ documentation, convenience.
 | SN-05 | Sphinx-Needs | low | external | latent (schemas) | schema `contains` on a list field rejected without `items` (ubc accepts) |
 | SN-06 | Sphinx-Needs | medium | external | n/a | `id_prefix` rewrites ids inside the text of imported needs (plain `str.replace`): literals changed (in this repo), ids corrupted (`BMS_SWBMS_…`, synthetic) — **changed** in 9.0.0: corruption fixed, literals still prefixed |
 | SN-07 | ubc + Sphinx-Needs | low | external | n/a | imported needs: `style` kept by ubc, dropped by Sphinx-Needs (intent undocumented) |
+| SN-08 | Sphinx-Needs | low | product_demo | applies (`docs/schemas.json`) | schema network failure: console line names the link **target** (`Need 'SPEC_HASH' has schema violations`), `schema_violations.json` names the source |
+| SN-09 | Sphinx-Needs | medium | product_demo | applies (fixed here with `flow_engine = "graphviz"`, plan 001 P6) | `needflow` with the default PlantUML engine but no PlantUML: the page shows "PlantUML is not available!", no warning — `sphinx-build -W` passes |
 | CL-01 | Sphinx-Codelinks | medium | external | n/a | fails in a git worktree (`.git` must be a directory) — **fixed in 2.0.0** |
 | CL-02 | Sphinx-Codelinks | medium | external | n/a | `.c` file without compile-database entry silently skipped |
-| CL-03 | Sphinx-Codelinks + ubc | low | external | n/a | `remote-url` / `local-url` mean different things in the two exports (path vs URL, local path) — **changed** in 2.0.0: `remote-url` same, `local-url` differs |
+| CL-03 | Sphinx-Codelinks + ubc | low | external | n/a (`set_local_url = false`; `remote-url` identical in both exports, plan 001 P2) | `remote-url` / `local-url` mean different things in the two exports (path vs URL, local path) — **changed** in 2.0.0: `remote-url` same, `local-url` differs |
 | CL-04 | Sphinx-Codelinks | low | external | n/a | source pages reference `_static/_static/…` (CSS 404): wrong `add_css_file` path |
 | CL-05 | Sphinx-Codelinks | medium | external | n/a | branch ref only in `packed-refs` (after `git gc`): source links to `blob/None`, warnings — **fixed in 2.0.0** |
 | CL-06 | Sphinx-Codelinks | medium | external | n/a | duplicate need id in code aborts the build (uncaught `InvalidNeedException`) — **fixed in 2.0.0** |
-| CL-07 | Sphinx-Codelinks | low | external | n/a (no codelinks) | `Unsupported Git host` warning for every marker when `origin` is not a known host, although `remote_url_pattern` is set |
+| CL-07 | Sphinx-Codelinks | low | external | n/a (origin is `github.com`; no warning, plan 001 P2) | `Unsupported Git host` warning for every marker when `origin` is not a known host, although `remote_url_pattern` is set |
 | SM-01 | sphinx-mounts + ubc | medium | external | n/a | bare boolean condition: sphinx-mounts aborts the build, ubc warns and drops the rule — **changed** in 0.3.0: same message, severity differs |
 | UA-01 | ubc-action | low | external | n/a | Linux runners only |
 | UA-02 | ubc-action | medium | external | n/a (the direct download in CI has no checksum either, see §8) | uses `actions/cache@v4` by tag: blocked in repositories that require SHA-pinned actions; downloads into the workspace, no checksum |
@@ -132,6 +147,7 @@ documentation, convenience.
 | STR-03 | Sphinx-Test-Reports | high | external | n/a | type declared in `[[needs.types]]` and `[test_reports.case]` aborts the Sphinx build |
 | STR-04 | Sphinx-Test-Reports + ubc | low | external | n/a | `test-results` summary `Errors: -1` in Sphinx, `0` in ubc, when the JUnit file has no `errors` attribute |
 | STR-05 | Sphinx-Test-Reports + ubc | low | external | n/a | renamed case directive (`[test_reports.case] directive`): ubc ignores the rename, Sphinx accepts it |
+| STR-06 | Sphinx-Test-Reports (docs) | low | product_demo | applies (`docs/schemas.json` `type-test-case`) | docs name the need types `test-file` / `test-suite` / `test-case`; both toolchains create `testfile` / `testsuite` / `testcase` — a schema `select` on `test-case` matches nothing, silently |
 
 ## 3. ubc / ubCode
 
@@ -163,6 +179,7 @@ documentation, convenience.
 - **Solution B:** an export option `--portable` (default for `ubc build needs`)
   that strips machine-specific fields and makes paths relative.
 - **Status:** open on ubc 0.37.0 (2026-10-17, plan 998 run 1): `ubc build needs` with and without `--source-maps` still writes no `docname` and absolute `__source__.path` / `local-url` (rollout-demo-bms@38c9f30; on `main@36f44a4` all 269 needs); no portable option in `--help`.
+- **Status:** open on ubc 0.37.0 (2026-10-17, plan 001 P2, product_demo): `ubc build needs` in `docs/` exports 14 needs, none with `docname`; Sphinx `needs.json` has it (e.g. `code/implementations`). No absolute paths here because `set_local_url = false`.
 
 ### UB-02 One `null` value drops the whole external-needs source
 
@@ -238,6 +255,8 @@ documentation, convenience.
 - **Solution A:** deep-merge dotted-key overrides into the loaded config.
 - **Solution B:** a separate `--set key=value` (merge) next to `-c <toml>` (replace), clearly documented.
 - **Status:** open on ubc 0.37.0 (2026-10-17, plan 998 run 1): `-c "codelinks.projects.vcu.analyse.preprocessor.compile_commands = '…'"` on `main@36f44a4` replaces the whole `codelinks.projects` table, not only `vcu`: `Unknown codelinks project: "chg"` (also `chg_tests`, `vcu_tests`), 255 needs, `IMPL_VCU_*` gone.
+- **Status:** open on ubc 0.37.0 (2026-10-17, plan 001 P1, product_demo): `ubc check -c 'needs.fields.status.schema = { type = "string", enum = [...] }'` in `docs/` → `Unknown need directive option "platform_note"`: the override replaced the whole `[needs.fields]` table.
+- **Status (2):** also for `[workflow]` (plan 001 P3): `ubc agent prompt --stage risks -c 'workflow.lifecycle.states = [...]'` → "no stage with that id is declared": the override replaced the whole `[workflow]` table.
 
 ### UB-06 Empty link lists omitted from `needs.json`
 
@@ -353,6 +372,7 @@ documentation, convenience.
 - **Solution A:** render URL fields (`remote-url`, `local-url`, fields with `needs_string_links`) as links, and map `local-url` to a generated source page as Sphinx does.
 - **Solution B:** an option for `ubc build html` to drop / rewrite machine-specific fields (`local-url`) for published builds.
 - **Status:** open on ubc 0.37.0 (2026-10-17, plan 998 run 1): `ubcode/subsystems/vcu/code_trace.html` (`main@36f44a4`) shows `local-url` (`file:///…`) and `remote-url` as plain text in `<td>`; also in `chg`.
+- **Status:** open on ubc 0.37.0 (2026-10-17, plan 001 P2, product_demo): `docs/_build/html/code/implementations.html` shows `https://github.com/PhilipPartsch/product_demo/blob/…` as text (0 `href`s), Sphinx renders 2 links.
 
 ### UB-15 `ubc build needs` exports no backlinks
 
@@ -435,6 +455,102 @@ documentation, convenience.
 - **Solution A:** ubc drops the need too, like Sphinx.
 - **Solution B:** document the difference; same diagnostic in both.
 - **Status:** open on ubc 0.37.0 / Sphinx-Needs 9.0.0 (2026-10-17, plan 998 run 1): `TEST_bad` on `main@36f44a4`: ubc `needs.id_regex` warning and 270 needs, Sphinx `[needs.create_need]` and 269 needs.
+
+### UB-20 Missing required link reported twice
+
+- **Origin:** product_demo
+- **Tool:** ubc 0.37.0
+- **Marker:** scratch copy of `docs/` on branch `feat/engineering-model` (plan 001 P1,
+  uncommitted) with `docs/schemas.json` and an added `bad.rst` holding one
+  broken need per rule.
+- **Summary:** a rule with `local.required: ["satisfies"]` and a
+  `network.satisfies.items` check reports a need without the link twice.
+- **Input:** rule `link-req-us` (`docs/schemas.json`), `.. req::` without `:satisfies:`.
+- **Wrong output:** `error[needs.schema_definition_violation] REQ_BAD_NOLINK:link-req-us: "satisfies" is a required property` **and** `error[needs.schema_network_violation] REQ_BAD_NOLINK:local_fail: "satisfies" is a required property`. Sphinx-Needs 9.0.0: one `local_fail` entry. Expected: one finding.
+- **Workaround:** none needed (both block); counts of ubc and Sphinx findings differ by these duplicates in parity checks.
+- **Solution A:** skip the network pass for a link field that failed `required`.
+- **Solution B:** de-duplicate findings with the same need, rule and message.
+
+### UB-21 Unsupported schema keyword disables the whole `schemas.json` in ubc
+
+- **Origin:** product_demo
+- **Tool:** ubc 0.37.0, Sphinx-Needs 9.0.0
+- **Marker:** scratch copy of `docs/` on branch `feat/engineering-model` (plan 001 P1,
+  uncommitted) with `docs/schemas.json` and an added `bad.rst` holding one
+  broken need per rule.
+- **Summary:** ubc supports only `allOf`, `properties`, `required`, `type`,
+  `unevaluatedProperties` in `select` / `local`. Any other keyword (here
+  `not`) makes ubc warn and apply no rule of the file at all; Sphinx-Needs
+  aborts the build with `NeedsConfigException`. The keyword subset is not
+  stated in the Sphinx-Needs schema docs.
+- **Input:** `"items": { "local": { "not": { "$ref": "#/$defs/type-dec" } } }` in rule `link-dec`.
+- **Wrong output:** ubc `warning[config.schema_unknown_key] … unknown key 'not' … no rule from this file is applied`; Sphinx `NeedsConfigException: Schemas entry 'link-dec[11]' is not valid`. Expected: the same reaction in both, and only the broken rule skipped (or both fail hard).
+- **Workaround:** allow-lists instead of `not` (`$defs/type-decidable`); `ubc check --deny warning` in CI turns the warning into a failure.
+- **Solution A:** ubc fails as hard as Sphinx (error, not warning).
+- **Solution B:** both skip only the invalid rule and report it; the docs list the supported keyword subset.
+
+### UB-22 `test-file` path: read against `rootdir`, mount-checked against `confdir`
+
+- **Origin:** product_demo
+- **Tool:** ubc 0.37.0, Sphinx-Test-Reports 3.0.0
+- **Marker:** branch `feat/engineering-model` (plan 001 P2, uncommitted): `docs/ubproject.toml`
+  `[test_reports]`, `tests/test_results.rst`.
+- **Summary:** project `docs/` (confdir), JUnit file `tests/_results/junit.xml`
+  at the repository root, `test-file` page mounted from `tests/`. ubc reads
+  `:file:` relative to `[test_reports] rootdir`, but its mount check
+  (`build.mount_path_escape`) resolves the same path relative to `docs/`; the
+  Sphinx-Test-Reports docs say `:file:` is relative to the `conf.py` folder.
+  So only paths that resolve to the same file under both bases work.
+- **Input / output** (`ubc check` in `docs/`):
+  - `rootdir = ".."`, `:file: ../tests/_results/junit.xml` → `needs.test_report_path_outside_root … it was not read` (the file **is** inside the repository root);
+  - `rootdir = ".."`, `:file: tests/_results/junit.xml` → `test_report_missing` + `mount_path_escape` (`../docs/tests/_results/junit.xml`);
+  - `rootdir = "../tests"`, `:file: ../tests/_results/junit.xml` → clean (both bases give `tests/_results/junit.xml`).
+- **Expected:** one documented base for `:file:` (confdir, as the STR docs say) used by reading, the root check and the mount check alike.
+- **Workaround:** `rootdir = "../tests"` with `:file: ../tests/_results/junit.xml`.
+- **Solution A:** resolve `:file:` against confdir everywhere, check it lies under `rootdir`.
+- **Solution B:** resolve against `rootdir` everywhere (also in the mount check) and document it in both tools.
+
+### UB-23 Unknown keys in `[parse.parsers.*]` accepted silently
+
+- **Origin:** product_demo
+- **Tool:** ubc 0.37.0
+- **Marker:** branch `feat/engineering-model` (plan 001 P2, uncommitted): `docs/ubproject.toml`
+  `[test_reports]`, `tests/test_results.rst` — found when a script edit put `rootdir = "../tests"` under `[parse.parsers.md]` by mistake.
+- **Input:** `ubc check -c 'parse.parsers.md.bogus_key = "x"'` in `docs/`.
+- **Wrong output:** `No errors found.` Expected: `config.unknown_key` warning, as for other tables (e.g. `config.schema_unknown_key`).
+- **Workaround:** review toml diffs; the misplaced key had no effect, which hid the mistake.
+- **Solution A:** warn on unknown keys in parser tables.
+- **Solution B:** `additionalProperties: false` for the parser tables in `ubproject.schema.json`, so the IDE flags them.
+
+### UB-24 Link conditions with inner brackets: silently dropped / parity break
+
+- **Origin:** product_demo
+- **Tool:** ubc 0.37.0, Sphinx-Needs 9.0.0
+- **Marker:** scratch copy of branch `feat/engineering-model` (plan 001 P5): field `fp` with `derive = { kind = "fingerprint" }`, `RISK_SCRYPT_PARAMS` `:mitigated_by: TSPEC_HASH[…]`.
+- **Summary:** conditional links (Sphinx-Needs 8.0) take a filter string in
+  brackets; a condition that itself contains `[` must use as many opening as
+  closing brackets (`ID[[…]]`).
+- **Input / output:**
+  - `TSPEC_HASH[fp[:12]=="a84103146b3c"]` (single) → no warning in either tool, `needs.json` link `['TSPEC_HASH']`: the condition is gone, a later change of `TSPEC_HASH` is never reported. Expected: `link_condition_invalid`.
+  - `TSPEC_HASH[[fp[:12]=="a84103146b3c"]]` (double) → ubc `warning[needs.link_condition_invalid]` (4×, also unchanged targets); Sphinx valid, and `link_condition_failed` after `TSPEC_HASH` changes. Expected: the same in both (ubc supports slicing, or both reject it).
+- **Workaround:** compare the full value (`ID[fp=="<64 hex>"]`), which works in both.
+- **Solution A:** reject unbalanced / unparsable conditions in both tools (`link_condition_invalid`).
+- **Solution B:** ubc supports the Python subset Sphinx evaluates (slicing), or the docs list the supported filter grammar.
+
+### UB-25 `parent_need` invisible to schema rules in ubc
+
+- **Origin:** product_demo
+- **Tool:** ubc 0.37.0, Sphinx-Needs 9.0.0
+- **Marker:** scratch copy of branch `feat/engineering-model` (plan 001 P5): `DEC_HASH_ALGO` / `DEC_AUDIT_STORE` nested in `SPEC_HASH` / `SPEC_AUDIT`, `DEC_OUTSIDE` written outside any need.
+- **Summary:** a rule "a decision is nested in a need" needs the core field
+  `parent_need`. Sphinx-Needs validates it; ubc does not resolve it as a
+  schema property and treats it as absent on every need.
+- **Input:** `{"id": "dec-nested", "select": {"$ref": "#/$defs/type-dec"}, "validate": {"local": {"required": ["parent_need"], "properties": {"parent_need": {"minLength": 1}}}}}`.
+- **Wrong output:** ubc `warning[needs.schema_config] … property 'parent_need' not found in field resolver, using schema-inferred type`, `… failed to parse schema for property 'parent_need'`, and `error[needs.schema_definition_violation] DEC_HASH_ALGO:dec-nested: "parent_need" is a required property` (also `DEC_AUDIT_STORE`, both nested). Sphinx: only `DEC_OUTSIDE` (`local_fail`, `"parent_need" is a required property`). `needs.json` of both tools carries `parent_need` (`DEC_HASH_ALGO` → `SPEC_HASH`).
+- **Expected:** the core fields of `needs.json` (`parent_need`, `parent_needs`, …) usable in schema rules in both tools.
+- **Workaround:** a derived copy, `[needs.fields.parent] schema.type = "string"`, `derive = { kind = "copy", field = "parent_need" }`, and the rule on `parent` — identical in both tools (`DEC_OUTSIDE` only).
+- **Solution A:** ubc's field resolver knows the core fields `parent_need` / `parent_needs`.
+- **Solution B:** document which core fields schema rules may reference; warn (not fail every need) when a rule names an unknown one.
 
 ## 4. Pharaoh (`ubc agent`)
 
@@ -620,6 +736,7 @@ documentation, convenience.
 - **Solution A:** mirror check for every skill found in any host location.
 - **Solution B:** `ubc agent skill add <path>` registering project skills in the manifest (then the existing mirror check applies).
 - **Status:** open on ubc 0.37.0 (2026-10-17, plan 998 run 1): changing or deleting the `.agents` copy of `draft-allocation` → `doctor` `ok: true`; only deleting the `.claude` copy is an error.
+- **Status:** open on ubc 0.37.0 (2026-10-17, plan 001 P4, product_demo): own skill `draft-us` with a changed `.agents` copy and `draft-spec` without `.github/agents` copy → `doctor` `ok: true` (25 checks). Workaround here: `scripts/mirror_skills.py --check` in CI.
 
 ### PH-05 addendum: membership links (plan 7)
 
@@ -698,6 +815,114 @@ are `bms_block`s of stage `bms_allocation`. Workaround: `direction =
 - **Solution A:** check the declared trace link per need of the produced type, not "has any link".
 - **Solution B:** report `trace_forward` gaps for needs that lack the declared outgoing link.
 - **Status:** open on ubc 0.37.0 (2026-10-17, plan 998 run 1): `TRES_MANUAL` with only `:links:` meets the `results_for` obligation: `agent gaps` `[]`, stage `test_results` done; without `:links:` it is an orphan.
+
+### PH-14 Lifecycle gate applies to every need, also types without a status
+
+- **Origin:** product_demo
+- **Tool:** ubc 0.37.0 (`agent gaps`, `agent status`)
+- **Marker:** branch `feat/engineering-model` (plan 001 P3, uncommitted), `docs/ubproject.toml` `[workflow]`, with `[workflow.lifecycle] states = ["proposed", "accepted", "superseded", "open", "mitigated", "closed"]` added.
+- **Summary:** only `dec` / `risk` carry a `status` in this model. With a
+  lifecycle declared, every other need (us, req, spec, impl, test_spec, test
+  results) is a `status_undeclared` gap and every stage shows
+  `failing_gates: ["lifecycle"]`. There is no per-type or per-stage scope for
+  the states.
+- **Wrong output:** `by_category: {'status_undeclared': 14, 'review': 8}`, e.g. `{'id': 'US_LOGIN', 'type': 'us', 'link': 'status', 'have': 0, 'need': 1, 'category': 'status_undeclared'}`. Expected: needs without a status, or of types no lifecycle covers, are not judged.
+- **Workaround:** no `[workflow.lifecycle]`; status values per type in `schemas.json` (`status-dec`, `status-risk`, `status-none`).
+- **Solution A:** `[workflow.lifecycle] types = [...]` (or states per type).
+- **Solution B:** judge only needs that set a status; an absent status is not "undeclared".
+
+### PH-15 Author prompt hard-codes the new need's status for every type
+
+- **Origin:** product_demo
+- **Tool:** ubc 0.37.0 (`agent prompt`, `agent run`)
+- **Marker:** branch `feat/engineering-model` (plan 001 P3, uncommitted), `docs/ubproject.toml` `[workflow]`; `ubc agent prompt --stage risks --id SPEC_HASH`.
+- **Summary:** the INSTRUCTION orders "a valid sphinx-needs RST directive with
+  a unique id, `:status: draft`" when no lifecycle is declared, and the first
+  lifecycle state otherwise — the same value for every stage / type. It adds
+  "If the SKILL block's worked example … shows a different `:status:` value,
+  this INSTRUCTION is authoritative". Here `draft` is no valid status at all,
+  `us` / `req` / … must have none, `dec` starts `proposed`, `risk` `open`.
+- **Wrong output:** `:status: draft` (no lifecycle); `:status: open` for every stage with `states = ["open", …]` (scratch copy). Expected: the status from the produced type's own rule, or none.
+- **Workaround:** each stage's `authoring` text states the status rule and says it overrides the generic line; `schemas.json` rejects a wrong value as a violation.
+- **Solution A:** a per-stage `initial_status` (empty = write none).
+- **Solution B:** derive it from the schema / field config of the produced type; drop the "authoritative" sentence for status.
+
+### PH-16 Cross-cutting stages: one element for all upstream needs, no route into a need
+
+- **Origin:** product_demo
+- **Tool:** ubc 0.37.0 (`agent prompt`)
+- **Marker:** branch `feat/engineering-model` (plan 001 P3, uncommitted), `docs/ubproject.toml` `[workflow]`; scratch variant with stages `decisions_req` / `decisions_spec` (`produces = "dec"`, route `single` to the parent's file, trace `up = "req"`, `link = "decides"`, `direction = "outgoing"`).
+- **Summary:** decisions here are nested in the one need they decide. A
+  global-scope stage lists all needs of its `up` type and orders "set
+  `:decides: REQ_AUTH, REQ_LOG` … Author or extend the `decisions_req` so EVERY
+  listed upstream need is satisfied by at least one element", even with
+  `direction = "outgoing"` (not gated). Routes name files (`single`,
+  `per-root`, `per-need` → `{id}` = a new file per need), never a position
+  inside an existing need.
+- **Expected:** a cross-cutting stage anchored on ONE need (`--id`), linking only that need, and a route kind "nested in the anchor need".
+- **Also regular stages (plan 001 P4):** with `route.scope = "global"` the `reqs` prompt anchored on `US_LOGIN` ordered `:satisfies: US_AUDIT, US_LOGIN`, `specs` `:refines: REQ_AUTH, REQ_LOG`, `code` `:implements: SPEC_AUDIT, SPEC_HASH`. With `scope = "stream"` (same single file) they order only the anchor's parent (`:satisfies: US_LOGIN`). The docs do not say that `scope` decides how many parents a new need must link.
+- **Workaround:** regular stages use `scope = "stream"`; decisions / risks are created by the stage skills through simple recording skills (payload hand-over); the `decisions` / `risks` stages carry no trace and exist for review / verdicts only; completeness via `schemas.json`.
+- **Solution A:** `route.granularity = "nested"` (inside the anchor need's directive) and anchor-only linking for optional stages.
+- **Solution B:** document that cross-cutting stages cover the whole upstream set, and offer a per-anchor mode.
+
+### PH-17 "CREATE THE FILE" for an existing single-file route
+
+- **Origin:** product_demo
+- **Tool:** ubc 0.37.0 (`agent prompt`)
+- **Marker:** branch `feat/engineering-model` (plan 001 P3, uncommitted), `docs/ubproject.toml` `[workflow]`; scratch stage `decisions_req` with route `single` → `requirements.rst` (exists, holds `REQ_AUTH`, `REQ_LOG`).
+- **Wrong output:** "CREATE THE FILE at `requirements.rst` using your file-writing tool — actually write the file to disk". Expected: "append to / edit the existing file `requirements.rst`" when it exists.
+- **Workaround:** skills say "append, never rewrite the file"; changes stay uncommitted for review.
+- **Solution A:** word the order by file existence (create vs. append).
+- **Solution B:** route option `mode = "append"`.
+
+### PH-18 No opt-out from preset skills: `update` restores what the project removed
+
+- **Origin:** product_demo
+- **Tool:** ubc 0.37.0 (`agent update`, `agent doctor`), profile `vmodel` 21
+- **Marker:** branch `feat/engineering-model` (plan 001 P4 follow-up, uncommitted): `docs/.pharaoh/agent/install-manifest` with 21 entries; scratch copies of the repository for the runs below.
+- **Summary:** a project that does not want some preset skills (here 11
+  unused ones: `draft-arch`, `review-arch`, `draft-test`, `record-decision`,
+  the recovery skills) and replaces others with its own pattern
+  (`draft-requirement`, `draft-impl`) cannot tell the engine so.
+- **Input / output:**
+  - files deleted, manifest unchanged → `doctor` ok; `update` restores the files;
+  - installed skill edited, manifest unchanged → `doctor` **error** `skill-integrity:draft-requirement` (+ 2 mirror errors); `update` `ok: false`, `conflicts` = its 3 copies;
+  - files deleted **and** manifest entries removed → `doctor` ok; first `update`: exit 0, files still gone, but the manifest is back to all 60 entries; second `update`: files restored;
+  - edited skill with manifest entries removed → `doctor` ok ("hand-authored or custom-named skill"); every `update`: `ok: false`, conflict on its 3 copies (content preserved).
+- **Expected:** a way to exclude preset assets (removed, or replaced by a project skill of the same name) that `update` and `doctor` respect.
+- **Workaround:** never run `ubc agent update` in the repository; run it in a shadow clone and port changes by hand (plan 998 §4.7).
+- **Solution A:** `[agent] exclude_assets = ["draft-arch", …]` / `override_assets = ["draft-requirement", …]`, honoured by `install`, `update` and `doctor`.
+- **Solution B:** `ubc agent update --only-owned` that never re-adds entries the project removed from the manifest.
+
+### PH-19 Decisions and risks never go stale in the review gate
+
+- **Origin:** product_demo
+- **Tool:** ubc 0.37.0 (`agent verdict-check`, `agent impact`, `agent context`)
+- **Marker:** scratch copy of branch `feat/engineering-model` (plan 001 P5): `DEC_HASH_ALGO` (accepted) nested in `SPEC_HASH` with `:decides: SPEC_HASH`; `RISK_SCRYPT_PARAMS` (mitigated) `:affects: SPEC_HASH`, `:mitigated_by: DEC_HASH_ALGO, TSPEC_HASH`; verdicts submitted for the three needs.
+- **Summary:**
+  1. Changing `SPEC_HASH`'s body → `verdict-check` `outdated: ['SPEC_HASH']` only; the decision that decides it and the risk that affects it stay fresh. Changing the mitigating `TSPEC_HASH` → nothing outdated. The one-hop fingerprint (PH-03) follows trace links, not `decides` / `affects` / `mitigated_by`.
+  2. `ubc agent impact --id SPEC_HASH` reaches `TSPEC_HASH`, `IMPL_HASH`, `RISK_SCRYPT_PARAMS` — not the nested `DEC_HASH_ALGO`.
+  3. The parent's fingerprint (`agent context`) includes the raw text of its nested decisions: editing only the decision changes `SPEC_HASH`'s fingerprint and outdates its verdict.
+- **Expected:** cross-cutting links count for staleness (a decision / risk is outdated when a need it links to changes); nested needs are excluded from the parent's fingerprint (they have their own).
+- **Workaround (found later in P5):** give the `decisions` / `risks` stages trace edges with `direction = "outgoing"`, one per target type (`decides` → us / req / spec / test_spec; `affects` → …; `mitigated_by` → req / spec / test_spec / dec). The one-hop fingerprint then follows those links: a changed parent outdates the decision and the risk, a changed mitigation outdates the risk; no trace gaps (outgoing edges are not gated), several edges per stage accepted by `config-validate`. Item 3 (nested text in the parent's fingerprint) remains and is accepted: editing a decision re-reviews its parent. Earlier fallback: own ledger script (option B+).
+- **Solution A:** a per-type list of links that feed the fingerprint (`[workflow] fingerprint_links`).
+- **Solution B:** fingerprint nested needs separately and exclude them from the parent's content hash.
+
+### PH-20 `release-check` baseline: undocumented format, cannot capture debt, no category filter
+
+- **Origin:** product_demo
+- **Tool:** ubc 0.37.0 (`agent release-check`)
+- **Marker:** scratch copy of branch `feat/engineering-model` (plan 001 P5 sample data: an open risk, a proposed decision, no verdicts).
+- **Summary:** plan 001's CI 1 should block *new* structural gaps but allow
+  missing reviews and open risks / proposed decisions on `main`.
+  `release-check --baseline` cannot express that:
+  1. `--help`: "a JSON gap-key list"; `[]` → `failed to parse baseline JSON … invalid type: sequence, expected a map`; the `ubc agent gaps` output → `… expected usize at line 2 column 10`. So the file is a map *key → count*; 11 plausible key spellings (`DEC_AUDIT_STORE`, `…:status`, `…|status|status_disallowed`, `status_disallowed:…`, …) all gave `baselined_debt: 0`. The key format is not documented.
+  2. `--update-baseline` "on a passing run" only — existing debt cannot be captured from today's (failing) state.
+  3. `review` (missing verdict) and `status_disallowed` (`release_disallow_status`) gaps are part of the gate, with no way to exclude categories, and a `-c` override of `workflow.release_disallow_status` replaces the whole `[workflow]` table (UB-05).
+- **Expected:** a documented baseline format (and `--write-baseline` from the current state); category selection (`--categories trace,orphan,…`) or a tier mode.
+- **Workaround:** `scripts/ci_gates.py gaps --tier main`: reads `ubc agent gaps`, ratchets structural gaps against its own `docs/.pharaoh/gaps-baseline.json` (`category:id:link` list), allows `review` / `status_disallowed`.
+- **Solution A:** document the key; add `release-check --write-baseline`.
+- **Solution B:** `release-check --allow <category>` per tier.
 
 ## 5. Sphinx-Needs
 
@@ -826,6 +1051,36 @@ warning); the abort comes from Sphinx-Codelinks — see CL-06.
 - **Solution B:** a per-source option in `[[needs.external_needs]]` (e.g.
   `keep_fields = ["style"]`), honoured by both tools.
 - **Status:** open on ubc 0.37.0 / Sphinx-Needs 9.0.0 (2026-10-17, plan 998 run 1): `BMS_GAP_REQ_CELL_BALANCING_WINDOW_NO_SATISFIES_BACK` `style` `red_bar` in ubc, `None` in Sphinx (`main@36f44a4`).
+
+### SN-08 Schema network failure: console names the link target
+
+- **Origin:** product_demo
+- **Tool:** Sphinx-Needs 9.0.0
+- **Marker:** scratch copy of `docs/` on branch `feat/engineering-model` (plan 001 P1,
+  uncommitted) with `docs/schemas.json` and an added `bad.rst` holding one
+  broken need per rule.
+- **Summary:** for a `validate.network` failure the console line names the
+  linked need, not the need that carries the bad link; `schema_violations.json`
+  is correct (`need_path: "REQ_BAD_TARGET > satisfies > SPEC_HASH"`).
+- **Input:** `.. req::` `REQ_BAD_TARGET` with `:satisfies: SPEC_HASH` (a spec), rule `link-req-us`.
+- **Wrong output:** `ERROR: Need 'SPEC_HASH' has schema violations:`. Expected: `Need 'REQ_BAD_TARGET' …` (as ubc: `REQ_BAD_TARGET:satisfies/SPEC_HASH: "us" was expected`).
+- **Workaround:** read `schema_violations.json` (CI does) instead of the console.
+- **Solution A:** log under the source need of the `need_path`.
+- **Solution B:** print the full `need_path` in the console line.
+
+### SN-09 `needflow` without PlantUML: error text in the page, no warning
+
+- **Origin:** product_demo
+- **Tool:** Sphinx-Needs 9.0.0 (Sphinx 9.1.0)
+- **Marker:** branch `feat/engineering-model` before the fix (plan 001 P6): `docs/engineering_model/index.rst` `.. needflow::`, no `flow_engine` set, no `sphinxcontrib.plantuml`.
+- **Summary:** the default `needs_flow_engine` is `plantuml`. Without the
+  PlantUML extension the diagram is replaced by the text "PlantUML is not
+  available!" in the HTML, and no warning is logged, so `sphinx-build -W`
+  succeeds. Seen by the user in the published page, not by CI.
+- **Expected:** a warning (e.g. `needs.flow_engine_unavailable`) so `-W` fails.
+- **Workaround:** `[needs] flow_engine = "graphviz"` + `sphinx.ext.graphviz` in `conf.py` (needs `dot`; CI installs graphviz). ubc draws `needflow` with mermaid either way.
+- **Solution A:** warn when the configured flow engine's extension is missing.
+- **Solution B:** fall back to graphviz (or mermaid) with an info message.
 
 ## 6. Sphinx-Codelinks
 
@@ -1053,7 +1308,7 @@ warning); the abort comes from Sphinx-Codelinks — see CL-06.
 - **Solution B:** publish checksums next to the binaries and let the action verify them and install outside the workspace (`$RUNNER_TOOL_CACHE`).
 - **Status:** open (2026-10-17, plan 998 run 1): unchanged `393f60b`; `actions/cache@v4` by tag, download into the workspace, no checksum.
 
-**This repository:** `.github/workflows/docs.yml` does not use the action; it
+**This repository:** `.github/workflows/ci-main.yml` / `ci-release.yml` (setup: `.github/actions/setup/action.yml`) do not use the action; it
 downloads `ubc` directly into `$RUNNER_TEMP` (the UA-02 workaround), but
 without the SHA-256 check, and uses `actions/checkout@v4` /
 `actions/upload-artifact@v4` by tag. Not a tool bug; a hardening follow-up
@@ -1139,3 +1394,18 @@ inputs named.
 - **Workaround:** keep the default directive name `test-case`.
 - **Solution A:** ubc supports the rename.
 - **Solution B:** STR warns that the rename is not supported by ubc (same code as ubc).
+
+### STR-06 Docs name the need types `test-case`, the tools create `testcase`
+
+- **Origin:** product_demo
+- **Tool:** Sphinx-Test-Reports 3.0.0 (docs), ubc 0.37.0
+- **Marker:** branch `feat/engineering-model` (plan 001 P2, uncommitted): `docs/ubproject.toml`
+  `[test_reports]`, `tests/test_results.rst`, `docs/schemas.json` `$defs/type-test-case`.
+- **Summary:** the configuration docs list the default need types as
+  `test-file` / `test-suite` / `test-case`; both ubc and Sphinx create
+  `testfile` / `testsuite` / `testcase` (`needs.json` `type`). A schema rule
+  with `select` `type == "test-case"` silently validates nothing.
+- **Workaround:** `"const": "testcase"`; negative test (wrong `executes` target) confirms the rule fires in both toolchains.
+- **Solution A:** fix the docs table (directive `test-case`, type `testcase`).
+- **Solution B:** warn when a schema `select` names a type that no need type declares.
+

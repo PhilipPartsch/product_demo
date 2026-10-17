@@ -1,14 +1,25 @@
 Verification
 ============
 
-.. test:: Authentication test
-   :id: TEST_AUTH
-   :tests: REQ_AUTH, SPEC_HASH
+Test specifications
+-------------------
 
-   Verifies authentication succeeds for valid credentials.
+.. test_spec:: Password hashing test
+   :id: TSPEC_HASH
+   :verifies: SPEC_HASH
+   :test_level: unit
+   :safety_relevant: false
+   :security_relevant: true
 
-.. test:: Audit logging test
-   :id: TEST_AUDIT
-   :tests: REQ_LOG, SPEC_AUDIT
+   Verifies that a stored password is a salted, memory-hard hash and that
+   login succeeds for valid credentials.
 
-   Verifies an audit record is written for each login attempt.
+.. test_spec:: Audit record test
+   :id: TSPEC_AUDIT
+   :verifies: SPEC_AUDIT
+   :test_level: unit
+   :safety_relevant: false
+   :security_relevant: true
+
+   Verifies that a structured, append-only audit record is written for each
+   login attempt.

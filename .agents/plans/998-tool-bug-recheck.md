@@ -59,7 +59,7 @@ Run §4 when any of these happens:
 |---|---|---|---|
 | T1 | New ubCode extension / ubc release | `ls ~/.vscode/extensions/ \| grep useblocks.ubcode`; `"$UBC" --version`; ubCode changelog | §6.1, §6.2 |
 | T2 | New Sphinx-Needs release | `curl -s https://pypi.org/pypi/sphinx-needs/json \| jq -r .info.version` | §6.3, and the parity entries of §6.1 (UB-06, UB-12, UB-15, UB-19) |
-| T3 | Pharaoh profile update (`ubc agent` reinstalls skills, `profile_version` in `docs/.pharaoh/agent/install-manifest` changes) | `git diff` of the manifest and the skill copies | PH-09, PH-10, PH-11 |
+| T3 | Pharaoh profile update (new ubc with a new `vmodel` profile version) | `ubc agent update` **in a shadow clone only** (§4.7): `profile_version` / skill diffs there | PH-09, PH-10, PH-11, PH-18; port changes per §4.7 |
 | T4 | Release of a tool not used here (Sphinx-Codelinks, sphinx-mounts, Sphinx-Test-Reports, ubc-action) | as T2 for the package; `gh api repos/useblocks/ubc-action/commits/main --jq .sha` | n/a entries of that tool — only with the origin repository (§2) |
 | T5 | useblocks reports a fix (release notes, issue replies) | release notes | the named entries |
 | T6 | This repository adopts a feature that turns a **latent** entry into **applies** (e.g. a `[workflow]`, schemas, `id_regex`, external needs) | the change itself | the entries plan 999 §2 names for that feature |
@@ -74,7 +74,7 @@ One-shot version check:
 ```bash
 UBC="$(ls -d ~/.vscode/extensions/useblocks.ubcode-*/server/cli/ubc | sort -V | tail -1)"
 "$UBC" --version
-grep UBC_VERSION .github/workflows/docs.yml
+grep UBC_VERSION .github/workflows/ci-main.yml .github/workflows/ci-release.yml
 for p in sphinx-needs sphinx-codelinks sphinx-mounts sphinx-test-reports ub-test-reports; do
   printf '%-22s %s\n' "$p" "$(curl -s "https://pypi.org/pypi/$p/json" | jq -r .info.version)"
 done
@@ -227,11 +227,42 @@ rm -rf "$S"; test ! -e "$S" && echo removed
 git status --short      # only the plan files 998 / 999 changed (other agents' files excepted)
 ```
 
+### 4.7 Profile update (T3) — never `ubc agent update` in the repository
+
+Since plan 001 (P4 follow-up) this repository removed 11 unused profile
+skills and replaced `draft-requirement` / `draft-impl` with its own pattern;
+their manifest entries are gone. `ubc agent update` in the repository would
+re-add every preset entry to the manifest, restore the removed skills on the
+next run and report the replaced ones as conflicts (`ok: false`, plan 999
+PH-18). So:
+
+1. In the shadow clone (§4.1): `cd docs && "$UBC" agent update`; run it twice
+   (the second run restores the files). Read `profile` / `version` and
+   `conflicts` from its JSON.
+2. Diff the preset content against this repository's skills:
+   - **unchanged installed skills** (`review-feat`, `review-requirement`,
+     `review-decision`, `drive-workflow`, `change-request`,
+     `.claude/commands/ubc-agent-next.md`, `workflow-author`): take the new
+     content as is (copy all three locations) and update their manifest
+     baselines (`sha256` of the new content);
+   - **replaced skills** (`draft-requirement`, `draft-impl`) and the **own
+     copies of generic skills** (`review-spec`, `review-test-spec`,
+     `review-risk` ← `review-requirement`): read the preset diff and port
+     what is relevant into `.agents/skills/<name>/SKILL.md` by hand, then
+     `python3 scripts/mirror_skills.py`;
+   - **removed skills**: ignore, unless the user wants a new one back;
+   - **new preset skills**: list them for the user (adopt / ignore).
+3. Quality packs (`docs/quality/{arch,decision,feat,requirement}.toml`):
+   diff; the own packs (`us`, `req`, `spec`, `test_spec`, `dec`, `risk`) are
+   based on them — port relevant changes.
+4. In the repository: `ubc agent doctor` ok, `scripts/mirror_skills.py
+   --check` ok; record in §7 which preset version the skills are ported from.
+
 ## 5. Outcome → follow-up
 
 | Outcome | Follow-up (never done inside the run) |
 |---|---|
-| Full build (§4.4) green on a new ubc | Propose a version raise on a feature branch: `UBC_VERSION` in `.github/workflows/docs.yml`, the local ubCode extension, and the versions named in `README.md` |
+| Full build (§4.4) green on a new ubc | Propose a version raise on a feature branch: `UBC_VERSION` in `.github/workflows/ci-main.yml` and `ci-release.yml`, the local ubCode extension, and the versions named in `README.md` |
 | Full build green on a new Sphinx-Needs | Update the comment "verified against sphinx-needs …" in `docs/ubproject.toml:24` (and `README.md:6` if the minimum changes); propose pinning an upper bound if a release broke the build before |
 | Full build red because of a tool problem | New plan 999 entry; no version raise until there is a workaround. For Sphinx-Needs, propose an upper bound (`sphinx-needs>=8.2,<X`) in the `sphinx` script right away, since it is unpinned |
 | UB-05 confirmed | Fix the README example (`README.md:44`, e.g. repeat `edition`, or use a second variants file) |

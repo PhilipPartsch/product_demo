@@ -1,0 +1,759 @@
+{
+  "$defs": {
+    "type-us": {
+      "properties": {
+        "type": {
+          "const": "us"
+        }
+      }
+    },
+    "type-req": {
+      "properties": {
+        "type": {
+          "const": "req"
+        }
+      }
+    },
+    "type-spec": {
+      "properties": {
+        "type": {
+          "const": "spec"
+        }
+      }
+    },
+    "type-impl": {
+      "properties": {
+        "type": {
+          "const": "impl"
+        }
+      }
+    },
+    "type-test_spec": {
+      "properties": {
+        "type": {
+          "const": "test_spec"
+        }
+      }
+    },
+    "type-dec": {
+      "properties": {
+        "type": {
+          "const": "dec"
+        }
+      }
+    },
+    "type-risk": {
+      "properties": {
+        "type": {
+          "const": "risk"
+        }
+      }
+    },
+    "type-test-case": {
+      "properties": {
+        "type": {
+          "const": "testcase"
+        }
+      }
+    },
+    "type-authored": {
+      "properties": {
+        "type": {
+          "enum": [
+            "us",
+            "req",
+            "spec",
+            "impl",
+            "test_spec",
+            "dec",
+            "risk"
+          ]
+        }
+      }
+    },
+    "type-mitigation": {
+      "properties": {
+        "type": {
+          "enum": [
+            "req",
+            "spec",
+            "test_spec",
+            "dec"
+          ]
+        }
+      }
+    },
+    "type-decidable": {
+      "properties": {
+        "type": {
+          "enum": [
+            "us",
+            "req",
+            "spec",
+            "impl",
+            "test_spec",
+            "risk"
+          ]
+        }
+      }
+    },
+    "status-mitigated": {
+      "properties": {
+        "status": {
+          "const": "mitigated"
+        }
+      },
+      "required": [
+        "status"
+      ]
+    },
+    "status-accepted": {
+      "properties": {
+        "status": {
+          "const": "accepted"
+        }
+      },
+      "required": [
+        "status"
+      ]
+    },
+    "type-no-status": {
+      "properties": {
+        "type": {
+          "enum": [
+            "us",
+            "req",
+            "spec",
+            "impl",
+            "test_spec",
+            "testfile",
+            "testsuite",
+            "testcase"
+          ]
+        }
+      }
+    },
+    "type-decision-required": {
+      "properties": {
+        "type": {
+          "enum": [
+            "us",
+            "req",
+            "spec",
+            "test_spec"
+          ]
+        }
+      }
+    },
+    "status-open": {
+      "properties": {
+        "status": {
+          "const": "open"
+        }
+      },
+      "required": [
+        "status"
+      ]
+    },
+    "status-proposed": {
+      "properties": {
+        "status": {
+          "const": "proposed"
+        }
+      },
+      "required": [
+        "status"
+      ]
+    }
+  },
+  "schemas": [
+    {
+      "id": "status-none",
+      "severity": "violation",
+      "message": "only decisions and risks carry a status",
+      "select": {
+        "$ref": "#/$defs/type-no-status"
+      },
+      "validate": {
+        "local": {
+          "properties": {
+            "status": {
+              "maxLength": 0
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "status-dec",
+      "severity": "violation",
+      "message": "decision status must be set and be proposed, accepted or superseded",
+      "select": {
+        "$ref": "#/$defs/type-dec"
+      },
+      "validate": {
+        "local": {
+          "properties": {
+            "status": {
+              "enum": [
+                "proposed",
+                "accepted",
+                "superseded"
+              ]
+            }
+          },
+          "required": [
+            "status"
+          ]
+        }
+      }
+    },
+    {
+      "id": "status-risk",
+      "severity": "violation",
+      "message": "risk status must be set and be open, mitigated, accepted or closed",
+      "select": {
+        "$ref": "#/$defs/type-risk"
+      },
+      "validate": {
+        "local": {
+          "properties": {
+            "status": {
+              "enum": [
+                "open",
+                "mitigated",
+                "accepted",
+                "closed"
+              ]
+            }
+          },
+          "required": [
+            "status"
+          ]
+        }
+      }
+    },
+    {
+      "id": "fields-common",
+      "severity": "violation",
+      "message": "safety_relevant and security_relevant must be set",
+      "select": {
+        "$ref": "#/$defs/type-authored"
+      },
+      "validate": {
+        "local": {
+          "required": [
+            "safety_relevant",
+            "security_relevant"
+          ]
+        }
+      }
+    },
+    {
+      "id": "fields-test-spec",
+      "severity": "violation",
+      "message": "a test specification needs a test_level",
+      "select": {
+        "$ref": "#/$defs/type-test_spec"
+      },
+      "validate": {
+        "local": {
+          "required": [
+            "test_level"
+          ]
+        }
+      }
+    },
+    {
+      "id": "fields-risk",
+      "severity": "violation",
+      "message": "a risk needs risk_category, severity and likelihood",
+      "select": {
+        "$ref": "#/$defs/type-risk"
+      },
+      "validate": {
+        "local": {
+          "required": [
+            "risk_category",
+            "severity",
+            "likelihood"
+          ]
+        }
+      }
+    },
+    {
+      "id": "link-req-us",
+      "severity": "violation",
+      "message": "a requirement satisfies at least one user story, and only user stories",
+      "select": {
+        "$ref": "#/$defs/type-req"
+      },
+      "validate": {
+        "local": {
+          "required": [
+            "satisfies"
+          ],
+          "properties": {
+            "satisfies": {
+              "minItems": 1
+            }
+          }
+        },
+        "network": {
+          "satisfies": {
+            "items": {
+              "local": {
+                "$ref": "#/$defs/type-us"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "link-spec-req",
+      "severity": "violation",
+      "message": "a specification refines at least one requirement, and only requirements",
+      "select": {
+        "$ref": "#/$defs/type-spec"
+      },
+      "validate": {
+        "local": {
+          "required": [
+            "refines"
+          ],
+          "properties": {
+            "refines": {
+              "minItems": 1
+            }
+          }
+        },
+        "network": {
+          "refines": {
+            "items": {
+              "local": {
+                "$ref": "#/$defs/type-req"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "link-impl-spec",
+      "severity": "violation",
+      "message": "an implementation implements at least one specification, and only specifications",
+      "select": {
+        "$ref": "#/$defs/type-impl"
+      },
+      "validate": {
+        "local": {
+          "required": [
+            "implements"
+          ],
+          "properties": {
+            "implements": {
+              "minItems": 1
+            }
+          }
+        },
+        "network": {
+          "implements": {
+            "items": {
+              "local": {
+                "$ref": "#/$defs/type-spec"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "link-tspec-spec",
+      "severity": "violation",
+      "message": "a test specification verifies at least one specification, and only specifications",
+      "select": {
+        "$ref": "#/$defs/type-test_spec"
+      },
+      "validate": {
+        "local": {
+          "required": [
+            "verifies"
+          ],
+          "properties": {
+            "verifies": {
+              "minItems": 1
+            }
+          }
+        },
+        "network": {
+          "verifies": {
+            "items": {
+              "local": {
+                "$ref": "#/$defs/type-spec"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "link-result-tspec",
+      "severity": "violation",
+      "message": "a test result executes only test specifications",
+      "select": {
+        "$ref": "#/$defs/type-test-case"
+      },
+      "validate": {
+        "network": {
+          "executes": {
+            "items": {
+              "local": {
+                "$ref": "#/$defs/type-test_spec"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "link-dec",
+      "severity": "violation",
+      "message": "a decision decides at least one need, and no other decision",
+      "select": {
+        "$ref": "#/$defs/type-dec"
+      },
+      "validate": {
+        "local": {
+          "required": [
+            "decides"
+          ],
+          "properties": {
+            "decides": {
+              "minItems": 1
+            }
+          }
+        },
+        "network": {
+          "decides": {
+            "items": {
+              "local": {
+                "$ref": "#/$defs/type-decidable"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "dec-nested",
+      "severity": "violation",
+      "message": "a decision lives nested inside the need it decides",
+      "select": {
+        "$ref": "#/$defs/type-dec"
+      },
+      "validate": {
+        "local": {
+          "required": [
+            "parent"
+          ],
+          "properties": {
+            "parent": {
+              "minLength": 1
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "link-risk-affects",
+      "severity": "violation",
+      "message": "a risk affects at least one need",
+      "select": {
+        "$ref": "#/$defs/type-risk"
+      },
+      "validate": {
+        "local": {
+          "required": [
+            "affects"
+          ],
+          "properties": {
+            "affects": {
+              "minItems": 1
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "link-risk-mitigation",
+      "severity": "violation",
+      "message": "a risk is mitigated only by requirements, specifications, test specifications or decisions",
+      "select": {
+        "$ref": "#/$defs/type-risk"
+      },
+      "validate": {
+        "network": {
+          "mitigated_by": {
+            "items": {
+              "local": {
+                "$ref": "#/$defs/type-mitigation"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "risk-mitigated",
+      "severity": "violation",
+      "message": "a mitigated risk names at least one mitigation (mitigated_by)",
+      "select": {
+        "allOf": [
+          {
+            "$ref": "#/$defs/type-risk"
+          },
+          {
+            "$ref": "#/$defs/status-mitigated"
+          }
+        ]
+      },
+      "validate": {
+        "local": {
+          "required": [
+            "mitigated_by"
+          ],
+          "properties": {
+            "mitigated_by": {
+              "minItems": 1
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "risk-accepted",
+      "severity": "violation",
+      "message": "an accepted risk is decided by an accepted decision",
+      "select": {
+        "allOf": [
+          {
+            "$ref": "#/$defs/type-risk"
+          },
+          {
+            "$ref": "#/$defs/status-accepted"
+          }
+        ]
+      },
+      "validate": {
+        "network_back": {
+          "decides": {
+            "contains": {
+              "local": {
+                "allOf": [
+                  {
+                    "$ref": "#/$defs/type-dec"
+                  },
+                  {
+                    "$ref": "#/$defs/status-accepted"
+                  }
+                ]
+              }
+            },
+            "minContains": 1
+          }
+        }
+      }
+    },
+    {
+      "id": "cov-us",
+      "severity": "info",
+      "message": "a user story is satisfied by at least one requirement",
+      "select": {
+        "$ref": "#/$defs/type-us"
+      },
+      "validate": {
+        "network_back": {
+          "satisfies": {
+            "contains": {
+              "local": {
+                "$ref": "#/$defs/type-req"
+              }
+            },
+            "minContains": 1
+          }
+        }
+      }
+    },
+    {
+      "id": "cov-req",
+      "severity": "info",
+      "message": "a requirement is refined by at least one specification",
+      "select": {
+        "$ref": "#/$defs/type-req"
+      },
+      "validate": {
+        "network_back": {
+          "refines": {
+            "contains": {
+              "local": {
+                "$ref": "#/$defs/type-spec"
+              }
+            },
+            "minContains": 1
+          }
+        }
+      }
+    },
+    {
+      "id": "cov-spec-impl",
+      "severity": "info",
+      "message": "a specification is implemented by at least one implementation",
+      "select": {
+        "$ref": "#/$defs/type-spec"
+      },
+      "validate": {
+        "network_back": {
+          "implements": {
+            "contains": {
+              "local": {
+                "$ref": "#/$defs/type-impl"
+              }
+            },
+            "minContains": 1
+          }
+        }
+      }
+    },
+    {
+      "id": "cov-spec-test",
+      "severity": "info",
+      "message": "a specification is verified by at least one test specification",
+      "select": {
+        "$ref": "#/$defs/type-spec"
+      },
+      "validate": {
+        "network_back": {
+          "verifies": {
+            "contains": {
+              "local": {
+                "$ref": "#/$defs/type-test_spec"
+              }
+            },
+            "minContains": 1
+          }
+        }
+      }
+    },
+    {
+      "id": "cov-tspec-result",
+      "severity": "info",
+      "message": "a test specification is executed by at least one test result",
+      "select": {
+        "$ref": "#/$defs/type-test_spec"
+      },
+      "validate": {
+        "network_back": {
+          "executes": {
+            "contains": {
+              "local": {
+                "$ref": "#/$defs/type-test-case"
+              }
+            },
+            "minContains": 1
+          }
+        }
+      }
+    },
+    {
+      "id": "dec-present",
+      "severity": "info",
+      "message": "the need documents its decisions (at least one nested dec decides it)",
+      "select": {
+        "$ref": "#/$defs/type-decision-required"
+      },
+      "validate": {
+        "network_back": {
+          "decides": {
+            "contains": {
+              "local": {
+                "$ref": "#/$defs/type-dec"
+              }
+            },
+            "minContains": 1
+          }
+        }
+      }
+    },
+    {
+      "id": "result-passed",
+      "severity": "info",
+      "message": "a test result must pass before a release",
+      "select": {
+        "$ref": "#/$defs/type-test-case"
+      },
+      "validate": {
+        "local": {
+          "properties": {
+            "result": {
+              "enum": [
+                "passed"
+              ]
+            }
+          },
+          "required": [
+            "result"
+          ]
+        }
+      }
+    },
+    {
+      "id": "risk-open",
+      "severity": "info",
+      "message": "an open risk must be mitigated, accepted or closed before a release",
+      "select": {
+        "allOf": [
+          {
+            "$ref": "#/$defs/type-risk"
+          },
+          {
+            "$ref": "#/$defs/status-open"
+          }
+        ]
+      },
+      "validate": {
+        "local": {
+          "properties": {
+            "status": {
+              "maxLength": 0
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "dec-proposed",
+      "severity": "info",
+      "message": "a proposed decision must be accepted or superseded before a release",
+      "select": {
+        "allOf": [
+          {
+            "$ref": "#/$defs/type-dec"
+          },
+          {
+            "$ref": "#/$defs/status-proposed"
+          }
+        ]
+      },
+      "validate": {
+        "local": {
+          "properties": {
+            "status": {
+              "maxLength": 0
+            }
+          }
+        }
+      }
+    }
+  ]
+}

@@ -226,3 +226,6 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Generated test results (pytest --junitxml)
+tests/_results/

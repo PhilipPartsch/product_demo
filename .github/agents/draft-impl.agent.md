@@ -1,22 +1,23 @@
 ---
 name: draft-impl
-description: Author an implementation element as a real need via a one-line codelinks marker in the production source, implementing the parent element it realises, so the parent's incoming back-link closes the implementation arm.
+description: Implement specifications in src/ as one-line codelinks markers above real code, each implementing its specification, and hand risks and implementation decisions to record-risk / record-dec.
 ---
 
-# Draft an implementation (impl-as-needs)
+<!-- Project skill (plan 001 P4 follow-up): replaces the installed vmodel
+     `draft-impl` with this project's pattern; removed from the install
+     manifest, so `ubc agent update` must only run in a shadow clone
+     (plan 998 T3). -->
 
-The implementation arm authors an implementation element as a REAL need, not as a
-URL field. You write a ONE-LINE codelinks marker in the production source; `ubc
-build` materialises it into a need of the type named in your briefing, carrying an
-outgoing trace link up to the parent element it implements, and the stage's trace
-edge counts the parent's incoming back-link for coverage.
+# Draft an implementation
+
+The produced need is one implementation (`impl`): a one-line codelinks
+marker in the production source, directly above the code that realises one
+specification. The marker materialises the need; the code beneath it is the
+implementation.
 
 Pass `-p <project path>` on every `ubc agent` command. `<project path>` is the
-directory that holds the target `ubproject.toml` (the project the need you are
-authoring belongs to). A repository can contain several `ubproject.toml`
-files, so without `-p` the command runs against the current directory and can
-target the wrong project. Resolve `<project path>` once from the briefing you
-were handed and reuse it on every call.
+directory that holds the target `ubproject.toml` (here `docs/`). Resolve it once
+from the briefing you were handed and reuse it on every call.
 
 When these instructions say `ubc`, run the exact version-matched `ubc` the
 harness named in the task, not a bare `ubc` from your PATH, and never one
@@ -24,91 +25,95 @@ you install yourself. With no path given, use the `ubc` on your PATH.
 
 ## Use the briefing and the tools — do NOT spelunk the filesystem
 
-The briefing in your prompt ALREADY contains the anchor need, the parent elements
-you must implement, and the resolved route. Do NOT re-discover the project: no
-`find`, `grep`, `cat`, or reading `.rst` files to rebuild context. When you need one
-specific need's full detail, run `ubc agent audit --id <PARENT_ID> -p <project path>`;
-for its context briefing run `ubc agent context --id <PARENT_ID> --no-code -p <project path>`.
-Author once at the reported route; do NOT run `ubc build` repeatedly to poke at
-state.
+The briefing in your prompt already contains the anchor need, the upstream
+needs and the resolved route. For one need's full detail run
+`ubc agent audit --id <ID> -p <project path>`; for its linked needs run
+`ubc agent context --id <ID> --no-code -p <project path>`. Prefer these over
+reading `.rst` files.
+
+## Incoming and outgoing needs
+
+- **Incoming:** the specification(s) in your briefing (`spec`). Read each
+  with `ubc agent audit --id <SPEC_ID>`; its `verifies_back` links name the
+  test specifications the code has to pass.
+- **Outgoing:** a marker + code in a Python module under `src/product_demo/`
+  (template `.agents/templates/impl.py`), exactly this shape (all six fields
+  required, positional):
+
+  ```python
+  # @<title>, IMPL_<NAME>, impl, [<SPEC_ID>], <safety_relevant>, <security_relevant>
+  ```
+
+  `<safety_relevant>` / `<security_relevant>` are `true` / `false`; the
+  bracketed list names only `spec` ids (schema rule `link-impl-spec`).
+- **Already in place — do not author:** the `src-trace` directive lives in
+  `src/implementations.rst` and covers all of `src/`. Do NOT create
+  `code_trace.rst` or any second `src-trace` for project `code`: every `impl`
+  need would then exist twice.
+- **Coverage:** every specification in the briefing is implemented by at
+  least one marker (trace gate `implements`, schema rule `cov-spec-impl`).
 
 ## Propose before you author
 
-Do NOT write any code or marker yet. First present a short, scannable outline of
-what you plan to author and ask the user to approve or adjust it. The outline
-lists:
+Do NOT write any code or marker yet. First present a short, scannable outline
+and ask the user to approve or adjust it:
 
-- the id (with the reported prefix) and short title of each implementation
-  marker you will write,
-- the trace link named in your briefing that each marker carries (the bracketed
-  parent id) and which parent it realises,
-- the source file under the route you will place each marker in, and whether
-  the route's trace file already carries the `src-trace` directive or you need
-  to author it.
+- per implementation: id (`IMPL_` prefix), title, the specification it
+  implements, the module and function / class, `safety_relevant` /
+  `security_relevant`,
+- the decisions (title, chosen option, rejected alternatives) and risks
+  (title, category, severity, likelihood) you will hand over.
 
-Keep it a scannable list, not the full marker or code. Wait for the user to
-approve or adjust, and do not author until they confirm. On approval, author
-exactly what you agreed.
+Wait for the user to confirm; then author exactly what was agreed, call the
+recording skills, and leave the review to the tests and the review step.
 
-## What you author — TWO things in the route
+## Status
 
-The stage's route is a directory (e.g. `src/`). For each parent element to
-implement, you author:
+Markers have no status field; write none anywhere (plan 999 PH-15).
 
-1. **The one-line marker in production source.** In a source file under the
-   route (e.g. `src/<feature>.py`), write ONE marker line per implementation, in
-   a comment, in the exact shape your prompt shows. That shape follows the
-   project's codelinks configuration (its start sequence, field separator and
-   field order), and a marker in any other shape is a comment nothing reads, so
-   write the shape in your prompt, not the one below. The one below is codelinks'
-   DEFAULT grammar, here for what each field means:
+## Edit, never rewrite
 
-   ```python
-   # @<short title>, <ID>, <type>, [<PARENT_ID>]
-   ```
+Add markers and code to existing modules or create a new module; never
+rewrite unrelated code. Keep the code minimal and idiomatic.
 
-   - `<ID>` carries the reported prefix and matches the project's `id_regex`.
-   - `<type>` is the type named in your briefing for this stage.
-   - the trace link is the bracketed field named in your briefing (the fourth
-     field in the default grammar): a bracketed list of the parent ids this
-     implementation realises (usually one).
-   - put real production code beneath the marker; the marker is what
-     materialises the need, the code beneath it is the implementation it
-     stands for. Keep it minimal and idiomatic for the target language.
+## Decisions and risks of this stage
 
-2. **The `src-trace` directive.** A one-line marker materialises a need ONLY
-   where a `.. src-trace::` directive naming the src-trace project from your
-   briefing appears in a BUILT `.rst` file. Ensure one exists — author
-   `code_trace.rst` under the route (or append to it if it already exists)
-   with:
+Implementations need no decision of their own, but record every real
+implementation choice and every risk you notice. You do not write these
+needs yourself: you fill a complete payload and hand it to the simple
+recording skill, which only renders it.
 
-   ```rst
-   .. src-trace::
-      :project: <the src-trace project named in your briefing>
-   ```
+**Record a decision** (`record-dec`) when the code depends on a choice the
+specification left open, for example a library, a data structure, a
+parameter value or an error-handling strategy. The marker is a comment and
+cannot hold a nested need, so nest the decision in the **specification** you
+implement: `target_need = <SPEC_ID>`, `decides = [<SPEC_ID>, <IMPL_ID>]`.
 
-   Without this directive the markers parse but no need is created and the
-   implementation gate never closes.
+**Record a risk** (`record-risk`) for anything that can make the code fail
+its specification, for example an unvalidated input, a security-sensitive
+primitive, a platform dependency or missing error handling. Use
+`risk_category = "ai-workflow"` for risks of the authoring itself (an
+assumption you could not verify, a guess you had to make).
+
+**Hand-over.** Payload schemas: `.agents/templates/handover/decision.json`,
+`.agents/templates/handover/risk.json`. Fill EVERY required field from your
+own work; the recording skills add nothing. A new decision has
+`status = "proposed"`, a new risk `status = "open"`. Write the marker and
+code first, then call `record-dec` / `record-risk` once per payload.
 
 ## Rules
 
-- **If you cannot decide which parent an implementation realises, or lack the
-  context to author it faithfully, do NOT guess or fabricate.** An
-  implementation that realises the wrong parent is worse than none. Author only
-  what the briefing grounds.
-- Every marker carries the bracketed trace link, naming its parent id, so the
-  trace link is present and the trace gate closes for the parent it realises.
-- One marker per implementation element; one trace target per coherent unit
-  (split distinct responsibilities into separate needs).
-- The `<ID>` carries the reported prefix and matches `id_regex`.
-- Do NOT reintroduce a URL field or a `@need-ids:` back-attach — this arm is
-  needs-in-source, not a ref-URL back-attach onto the parent.
-- Do NOT write a verdict here. Drafting authors the NEED; review is a separate
-  stage.
+- **If you cannot decide which specification an implementation realises, or
+  lack the context, do NOT guess or fabricate.** Leave the marker out, say
+  what is missing, and record an `ai-workflow` risk.
+- One marker per implementation element; one specification per coherent unit
+  (split distinct responsibilities).
+- The `:id:` uses the `IMPL_` prefix and matches `^[A-Z]+_[A-Z][A-Z0-9_]*$`.
+- No URL fields, no `@need-ids:` back-attach — this project uses one-line
+  needs only.
 
 ## Confirm
 
-After authoring, run `ubc build needs` then `ubc agent gaps -p <project path>`
-to confirm every parent now carries the incoming back-link the trace gate
-checks. A `trace_backward` gap on a parent means it is still unimplemented.
-Add a marker covering it.
+Run `ubc script --path <project path> tests` (the tests of the verifying test
+specifications must pass) and `ubc check <project path>` (no warning or
+error). Leave all changes uncommitted for human review.

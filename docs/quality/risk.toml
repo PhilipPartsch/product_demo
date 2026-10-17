@@ -1,0 +1,60 @@
+# Own criteria pack for `risk` (plan 001 §5.4); the vmodel profile ships none.
+#
+# Every axis is judgment-only and scored 0..2 (2 = fully meets, 1 = partial,
+# 0 = the fail condition).
+
+guidance = """
+- Fail closed: when genuinely uncertain whether an axis is met, score it 0 \
+rather than giving the benefit of the doubt, and explain the uncertainty in \
+your reasoning.
+- Judge the risk as stated, together with the needs it affects and the needs \
+that mitigate it (your briefing lists them).
+- If the risk's body is empty or unreadable, score every axis 0 and say so."""
+
+[[criterion]]
+id = "cause_and_effect"
+name = "Cause and Effect"
+description = """
+Whether the risk names what can go wrong, why, and what the effect on the \
+affected needs would be."""
+scoring_guide = """
+0: Cause or effect is missing; the text only names a topic.
+1: Cause and effect are named, but one of them stays vague.
+2: Cause, triggering condition and effect on the affected needs are clear."""
+max_score = 2
+
+[[criterion]]
+id = "rating_justified"
+name = "Rating Justified"
+description = """
+Whether `severity` and `likelihood` fit the described cause and effect."""
+scoring_guide = """
+0: The rating contradicts the description (e.g. a data leak rated low severity without reason).
+1: The rating is plausible but not explained where it is not obvious.
+2: Both ratings follow clearly from the description."""
+max_score = 2
+
+[[criterion]]
+id = "affected_complete"
+name = "Affected Complete"
+description = """
+Whether the `affects` links name every need the effect lands on."""
+scoring_guide = """
+0: An obviously affected need is not linked.
+1: The main affected need is linked, a secondary one is missing.
+2: Every affected need is linked."""
+max_score = 2
+
+[[criterion]]
+id = "mitigation_fit"
+name = "Mitigation Fit"
+description = """
+Whether the mitigation (body text and `mitigated_by` links) fits the status: \
+an `open` risk names a planned mitigation, a `mitigated` one links the needs \
+that now mitigate it and they really address the cause, an `accepted` one is \
+accepted by a decision that says why."""
+scoring_guide = """
+0: The status claims mitigation or acceptance that the links / text do not support.
+1: Mitigation is plausible but only partly addresses the cause.
+2: Mitigation and status are consistent and address the cause."""
+max_score = 2

@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Decision hand-over (stage skill -> record-dec)",
+  "description": "Everything record-dec needs to render templates/dec.rst nested inside target_need. The stage skill fills every field from its own work and the user's approval; record-dec adds nothing.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["target_need", "id", "title", "context", "alternatives", "chosen", "consequences", "rationale", "decides", "status", "safety_relevant", "security_relevant"],
+  "properties": {
+    "target_need": { "type": "string", "description": "Id of the need the decision is nested in (the parent)." },
+    "id": { "type": "string", "pattern": "^DEC_[A-Z][A-Z0-9_]*$" },
+    "title": { "type": "string", "description": "A few words naming what is decided." },
+    "context": { "type": "string" },
+    "alternatives": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object", "additionalProperties": false, "required": ["option", "why_not"],
+        "properties": { "option": { "type": "string" }, "why_not": { "type": "string" } }
+      },
+      "description": "Rejected alternatives; at least one."
+    },
+    "chosen": { "type": "string", "description": "The chosen option (goes into the Rationale)." },
+    "consequences": { "type": "string" },
+    "rationale": { "type": "string", "description": "One sentence: why the chosen option beats the alternatives." },
+    "decides": {
+      "type": "array", "minItems": 1, "items": { "type": "string" },
+      "description": "Needs the decision decides; must contain target_need. No dec ids. Usually just [target_need]: the nested decision then decides its parent automatically (no :decides: written). With further ids, record-dec writes :decides: with all of them."
+    },
+    "status": { "enum": ["proposed", "accepted", "superseded"], "description": "A new decision is proposed." },
+    "safety_relevant": { "type": "boolean" },
+    "security_relevant": { "type": "boolean" }
+  }
+}
